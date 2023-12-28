@@ -1,0 +1,399 @@
+      *-                                                                            +
+      * Copyright (c) 2001-2021 Scott C. Klement                                    +
+      * All rights reserved.                                                        +
+      *                                                                             +
+      * Redistribution and use in source and binary forms, with or without          +
+      * modification, are permitted provided that the following conditions          +
+      * are met:                                                                    +
+      * 1. Redistributions of source code must retain the above copyright           +
+      *    notice, this list of conditions and the following disclaimer.            +
+      * 2. Redistributions in binary form must reproduce the above copyright        +
+      *    notice, this list of conditions and the following disclaimer in the      +
+      *    documentation and/or other materials provided with the distribution.     +
+      *                                                                             +
+      * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+      * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+      * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+      * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+      * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+      * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+      * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+      * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+      * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+      * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+      * SUCH DAMAGE.                                                                +
+      *                                                                             +
+      */                                                                            +
+
+      *
+      *  This header file contains the constants, data structures
+      *  and prototypes used by the record i/o functions that are
+      *  part of the C runtime libraries.
+      *
+
+      **-------------------------------------------------------
+      *  Constants:
+      **-------------------------------------------------------
+     D EOF             C                   -1
+     D FILENM_MAX      C                   39
+     D ROPEN_MAX       C                   32767
+     D RRN_EQ          C                   134218496
+     D KEY_EQ          C                   184549632
+     D KEY_GT          C                   218104064
+     D KEY_LT          C                   150995200
+     D KEY_LE          C                   167772416
+     D KEY_GE          C                   201326848
+     D KEY_NEXTUN      C                   83886336
+     D KEY_PREVUN      C                   100663552
+     D KEY_NEXTEQ      C                   234881280
+     D KEY_PREVEQ      C                   251658496
+
+     D FIRST           C                   16777984
+     D LAST            C                   33555200
+     D NEXT            C                   50332416
+     D PREVIOUS        C                   67109632
+
+     D START_FRC       C                   50331652
+     D START           C                   16777220
+     D END_FRC         C                   67108868
+     D END             C                   33554436
+
+     D DFT             C                   184549632
+     D NO_LOCK         C                   1
+     D NO_POSITN       C                   1048576
+     D PRIOR           C                   4096
+     D DATA_ONLY       C                   2
+     D NULL_KEY_M      C                   8
+
+     D READ_NEXT       C                   3
+     D READ_PREV       C                   4
+
+     D NOT_NULL_V      C                   '0'
+     D NULL_VALUE      C                   '1'
+     D MAPPING_ER      C                   '2'
+
+     D DK_YES          C                   1
+     D DK_NO           C                   0
+
+      **-------------------------------------------------------
+      *  "Record" file handle data type
+      *     TODO: should probably define the structure,
+      *        (but its not necessary to call the API)
+      **-------------------------------------------------------
+     D RFILE           S               *
+
+      **-------------------------------------------------------
+      *  I/O Feedback Structure  (returned by most Rreadx calls)
+      *
+      *  typedef struct {
+      *    unsigned char               *key;
+      *    _Sys_Struct_T               *sysparm;
+      *    unsigned long                rrn;
+      *    long                         num_bytes;
+      *    short                        blk_count;
+      *    char                         blk_filled_by;
+      *    int                          dup_key   : 1;
+      *    int                          icf_locate: 1;
+      *    int                          reserved1 : 6;
+      *    char                         reserved2[20];
+      *  } _RIOFB_T;
+      **-------------------------------------------------------
+     D p_RIOFB_t       S               *
+     D RIOFB_T         DS                  based(p_RIOFB_t)
+     D  RI_key                         *
+     D  RI_sysparm                     *
+     D  RI_rrn                       10U 0
+     D  RI_nbytes                    10I 0
+     D  RI_blkcnt                     5I 0
+     D  RI_blkfilb                    1A
+     D  RI_flags                      1A
+     D  RI_reserv                    20A
+
+      *-------------------------------------------------------
+      * Open Feedback Information:
+      *
+      *   typedef _Packed struct _XXDEV_LST_T {
+      *      char        pgm_dev_name[10];                 10
+      *      char        reserved1[50];                    60
+      *      char        dev_desc_name[10];                70
+      *      char        dev_class;                        71
+      *      char        dev_type;                         72
+      *      short       num_rows;                         76
+      *      short       num_columns;                      80
+      *
+      *      /* BIT FLAGS...               */
+      *
+      *      int         blink_capability_flag    : 1;
+      *      int         dev_location_flag        : 1;
+      *      int         acquire_status_flag      : 1;
+      *      int         invite_status_flag       : 1;
+      *      int         data_avail_status_flag   : 1;
+      *      int         transaction_status_flag  : 1;
+      *      int         requester_dev_flag       : 1;
+      *      int         DBCS_dev_flag            : 1;    81
+      *      int                                  : 2;    /* reserved   */
+      *      int         DBCS_keyboard_flag       : 1;
+      *      int                                  : 5;    82
+      *
+      *      char        synch_level;                     83
+      *      char        conversation_type;               84
+      *      char        reserved2[50];                  134
+      *   } _XXDEV_LST_T;                            (134 bytes long)
+      *
+      *   typedef _Packed struct _XXOPFB_T {
+      *       char        odp_type[2];
+      *       char        file_name[10];
+      *       char        library_name[10];
+      *       char        spool_file_name[10];
+      *       char        spool_lib_name[10];
+      *       short       spool_file_num;
+      *       short       pgm_record_len;
+      *       char        reserved1[2];
+      *       char        member_name[10];
+      *       char        reserved2[8];
+      *       short       file_type;
+      *       char        reserved3[3];
+      *       short       rows;
+      *       short       columns;
+      *       int         num_records;
+      *       char        access_type[2];
+      *       char        dup_key_indic;
+      *       char        src_file_indic;
+      *       char        reserved4[10];
+      *       char        reserved5[10];
+      *       short       vol_label_offset;
+      *       short       max_blocked_recs;
+      *       short       overflow_line_num;
+      *       short       blocked_rec_incr;
+      *       char        reserved6[4];
+      *
+      *       /* MISCELLANEOUS FLAGS...     */
+      *
+      *       int                                  : 1;    /* reserved   */
+      *       int         file_sharable_flag       : 1;
+      *       int         commit_control_flag      : 1;
+      *       int         commit_lock_level_flag   : 1;
+      *       int         mbr_type_flag            : 1;
+      *       int         field_level_file_flag    : 1;
+      *       int         DBCS_capable_flag        : 1;
+      *       int         EOF_delay_flag           : 1;
+      *
+      *       char        requester_dev_name[10];
+      *       short       file_open_count;
+      *       char        reserved7[2];
+      *       short       num_based_pf_mbrs;
+      *
+      *       int         mult_mbr_process_flag    : 1;
+      *       int         join_logical_file_flag   : 1;
+      *       int         local_remote_data_flag   : 1;
+      *       int         remote_AS400_S38_flag    : 1;
+      *       int         sep_indic_area_flag      : 1;
+      *       int         user_buffers_flag        : 1;
+      *       int                                  : 2;      /* reserved   */
+      *       char        reserved8[2];
+      *       short       max_rcd_length;
+      *       unsigned short  ccsid;
+      *       int         null_capable             : 1;
+      *       int         varlen_fields_file       : 1;
+      *       int         varlen_record_file       : 1;
+      *       int         ccsid_sub_char           : 1;
+      *       int         reserved9                : 4;
+      *       char        reserved10[4];
+      *       short       max_pgm_devices;
+      *       short       num_pgm_devices;
+      *       _XXDEV_LST_T dev_list_array[250];
+      *   } _XXOPFB_T;
+      *-------------------------------------------------------
+     D p_xxopfb        S               *
+     D xxopfb_t        ds                  based(p_xxopfb)
+     D  odp_type                      2A
+     D  file_name                    10A
+     D  lib_name                     10A
+     D  splf_name                    10A
+     D  splf_lib                     10A
+     D  splf_num                      5I 0
+     D  pgm_reclen                    5I 0
+     D  xxopf_res1                    2A
+     D  mbr_name                     10A
+     D  xxopf_res2                    8A
+     D  file_type                     5I 0
+     D  xxopf_res3                    3A
+     D  rows                          5I 0
+     D  columns                       5I 0
+     D  num_recs                     10I 0
+     D  acc_type                      2A
+     D  dup_indic                     1A
+     D  src_indic                     1A
+     D  xxopf_res4                   10A
+     D  xxopf_res5                   10A
+     D  vollbl_off                    5I 0
+     D  maxblkrecs                    5I 0
+     D  ovrflw_lin                    5I 0
+     D  blkrec_inc                    5I 0
+     D  xxopf_res6                    4A
+     D  misc_flags                    1A
+     D  req_dev                      10A
+     D  fileopncnt                    5I 0
+     D  xxopf_res7                    2A
+     D  numbasedpf                    5I 0
+     D  oth_flags                     1A
+     D  xxopf_res8                    2A
+     D  maxreclen                     5I 0
+     D  ccsid                         5U 0
+     D  moreflags                     1A
+     D  xxopf_res9                    4A
+     D  maxpgmdev                     5I 0
+     D  numpgmdev                     5I 0
+      ** we're cheating, here:
+      **  this breaks V3R2 compatability...
+      **devlistarr                  134A   dim(250)
+
+      **-------------------------------------------------------
+      *  _Rclose -- close an open record file
+      *
+      *   int _Rclose(_RFILE *fp);
+      **-------------------------------------------------------
+     D Rclose          PR            10I 0 ExtProc('_Rclose')
+     D   fp                                like(RFILE) value
+
+
+      **-------------------------------------------------------
+      *  _Rdelete -- delete a record from file
+      *
+      *      _RIOFB_T *_Rdelete(_RFILE *fp);
+      **-------------------------------------------------------
+     D Rdelete         PR            10I 0 ExtProc('_Rdelete')
+     D   fp                                like(RFILE) value
+
+
+      **-------------------------------------------------------
+      * _Rfeod -- Force End Of Data
+      *
+      * int _Rfeod(_RFILE *fp);
+      *
+      **-------------------------------------------------------
+     D Rfeod           PR            10I 0 ExtProc('_Rfeod')
+     D   fp                                like(RFILE) value
+
+
+      **-------------------------------------------------------
+      * _Rlocate -- Position to a record
+      *
+      * int _Rlocate(_RFILE *fp, void *key, int klen_rrn, int opts);
+      *
+      **-------------------------------------------------------
+     D Rlocate         PR            10I 0 ExtProc('_Rlocate')
+     D   fp                                like(RFILE) value
+     D   key                           *   value
+     D   klen_rrn                    10I 0 value
+     D   opts                        10I 0 value
+
+
+      **-------------------------------------------------------
+      *  _Ropen -- open a record file for processing:
+      *
+      * _RFILE *_Ropen(const char * filename, const char * mode, ...);
+      **-------------------------------------------------------
+     D Ropen           PR              *   ExtProc('_Ropen')
+     D   filename                      *   value options(*string)
+     D   mode                          *   value options(*string)
+
+
+      **-------------------------------------------------------
+      ** _Ropnfbk -- get open feedback information:
+      **
+      ** _XXOPFB_T *_Ropnfbk(_RFILE *fp);
+      **
+      **-------------------------------------------------------
+     D Ropnfbk         PR              *   ExtProc('_Ropnfbk')
+     D   fp                                like(RFILE) value
+
+
+      **-------------------------------------------------------
+      * _Rrlslck -- Release record lock
+      *
+      * int _Rrlslck(_RFILE *fp);
+      *
+      **-------------------------------------------------------
+     D Rrlslck         PR            10I 0 ExtProc('_Rrlslck')
+     D   fp                                like(RFILE) value
+
+
+      **-------------------------------------------------------
+      *  _Rreadk -- read next record in file by key
+      *      (i.e. this is similar to a CHAIN operation)
+      **-------------------------------------------------------
+     D Rreadk          PR              *   ExtProc('_Rreadk')
+     D   fp                                like(RFILE) value
+     D   buf                           *   value
+     D   buf_size                    10U 0 value
+     D   opts                        10I 0 value
+     D   key                           *   value
+     D   keylen                      10U 0 value
+
+
+      **-------------------------------------------------------
+      *  _Rreadf -- read first record in file
+      *
+      **-------------------------------------------------------
+     D Rreadf          PR              *   ExtProc('_Rreadf')
+     D   fp                                like(RFILE) value
+     D   buf                           *   value
+     D   buf_size                    10U 0 value
+     D   opts                        10I 0 value
+
+
+      **-------------------------------------------------------
+      *  _Rreadn -- read next record in file
+      *
+      **-------------------------------------------------------
+     D Rreadn          PR              *   ExtProc('_Rreadn')
+     D   fp                                like(RFILE) value
+     D   buf                           *   value
+     D   buf_size                    10U 0 value
+     D   opts                        10I 0 value
+
+
+      **-------------------------------------------------------
+      *  _Rreadp -- read previous record in file
+      **-------------------------------------------------------
+     D Rreadp          PR              *   ExtProc('_Rreadp')
+     D   fp                                like(RFILE) value
+     D   buf                           *   value
+     D   buf_size                    10U 0 value
+     D   opts                        10I 0 value
+
+
+      **-------------------------------------------------------
+      *  _Rreadl -- read last record in file
+      *
+      **-------------------------------------------------------
+     D Rreadl          PR              *   ExtProc('_Rreadl')
+     D   fp                                like(RFILE) value
+     D   buf                           *   value
+     D   buf_size                    10U 0 value
+     D   opts                        10I 0 value
+
+
+      **-------------------------------------------------------
+      * _Rupdate -- update record
+      *
+      * _RIOFB_T *_Rupdate(_RFILE *fp, void *buf, size_t size);
+      *
+      **-------------------------------------------------------
+     D Rupdate         PR              *   ExtProc('_Rupdate')
+     D   fp                                like(RFILE) value
+     D   buf                           *   value
+     D   size                        10U 0 value
+
+
+      **-------------------------------------------------------
+      * _Rwrite -- add new record
+      *
+      * _RIOFB_T *_Rwrite(_RFILE *fp, void *buf, size_t size);
+      *
+      **-------------------------------------------------------
+     D Rwrite          PR              *   ExtProc('_Rwrite')
+     D   fp                                like(RFILE) value
+     D   buf                           *   value
+     D   size                        10U 0 value

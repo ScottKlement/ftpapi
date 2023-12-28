@@ -1,0 +1,164 @@
+Changes from 2.5 -> 2.4:
+  Only replace .SAVF with .FILE if path is pointing to a library,
+    since people are using .SAVF for IFS extensions these days.
+
+Changes from 2.3 -> 2.4:
+  Added FTP_noop to send noops if needed.
+  Corrected error where CLRSAVF was run when restarting a save file,
+    but not when starting fresh. (Opposite of what it should be.)
+  Allow IFS file extension of .SAVF as an alias for .FILE when the
+    file type is a save file.
+
+Changes from 2.2 -> 2.3:
+  Fixed bug in INSTALL where RTVMBRD did not qualify the source
+    file name.  (Bruce Henke)
+  Remove the SIZE subcommand from the log, since it's confusing
+    people. (Scott)
+  When downloading directories (using wkXlatHack), translate CRLF
+    to ASCII using ToASCII rather than ToASCIIF.  (Christian V.)
+  Tag new stream files using wkEBCDICF_cp instead of DFT_LOC_CP
+    in case user changed translations (Loek Maartens)
+  Save/Restore linemode when using OpnFile() so that it always
+    falls back to the one set by the user. (Loek Maartens)
+  Added FTP_Crash() routine to force FTPAPIR4 to abend
+  Added FTP_Restart() routine to allow re-start of file transfers
+
+Changes from 2.1 -> 2.2:
+  Fixed bug, FTPAPI didn't recognize the *DSTMF file type. (Scott)
+
+Changes from 2.0 -> 2.1:
+  Use Qp0lCvtPathToQSYSObjName API instead of internal procedure
+    so that it'll work with alternate ASPs (Scott)
+  Use lstat64() to allow for larger file size monitoring when
+    showing transfer progress (Scott)
+  Fix bug in OpnFile(), where it was changing the line modes for
+    all sessions. (Scott)
+  Fix bug in various deprecated functions where they failed to
+    change sessions when one is skipped in the sequence. (Scott)
+  Split source out from original FTPAPISRC source file into
+    separate QRPGLESRC,QCLSRC,QSH, and QSRVSRC files. (Scott)
+  Add message id CPFA0A7 ("Path name too long") to indicate that
+    an IFS pathname was requested rather than a QSYS one in
+    ParsePath.  (Loyd Goodbar)
+
+Changes from 1.12 -> 2.0:
+  Allow specification of record length when using FTP_getraw()
+    with a line-mode of 'R' (Scott)
+  Dropped support for pre V4R4M0 releases (Scott)
+  Now keeping global variables in MODS so that multiple sessions
+    can run without conflicts (Thomas Raddatz)
+  Moved changes from README mbr to this ChangeLog mbr (Scott)
+  New subprocedure to enable/disable the SIZE FTP subcommand when
+    doing an FTP_get() (Loek Maartens)
+  Added subprocedures:  FTP_ParseURL, FTP_url_get_raw, and
+    FTP_url_get to allow retrieivng data by URL (Scott)
+  Added TESTURL program to demonstrate/test FTP_url_get (Scott)
+  Restore session after any call to an outside procedure (Scott)
+  Replace SCAN op-code with memchr() in Bufline, simplifies code
+    and improves performance (Scott)
+  Replace OffsetPtr & dsDirLine with pointer arithmetic, now that
+    it's no longer necessary to support V3R2. (Scott)
+  Added TEST2SESS program to demonstrate the use of multiple
+    FTP sessions simultaneously.  (Scott)
+  Set translation table for control connection to the job's
+    codepage instead of harcoded 37 (Thomas Raddatz)
+  Older procs, FTP_binary, FTP_linmod, et al will now set the
+    attributes of ALL sessions, whereas the newer FTP_binaryMode,
+    FTP_lineMode, etc will set a specific session. (Scott)
+  Change FTPAPI to use lstat64() and open64() so that it can
+    handle larger files. (Scott)
+
+Changes from 1.11 -> 1.12:
+  Added new function FTP_trim() which can be used to turn trimming
+  on or off when sending a PF in ASCII mode to a remote server.
+
+Changes from 1.10 -> 1.11:
+  Changed domain names to 'www.scottklement.com' (woo-hoo!)
+  Fixed some '@' symbols that got mistranslated somehow.
+  Added diagnostic messages for failures of QUSROBJD and QUSRMBRD
+    API calls, to aid in debugging.
+  Fixed bug in getdir() subproc that was causing relative pathname
+    processing to fail. (Thanks go to Brian J. Garland for helping me
+    to find this)
+
+Changes from 1.9 -> 1.10:
+  Added support for the ACCT command during login.  It seems
+    that some servers still use this.
+  Changed behavior of ftp_chdir(x: '..') to send the CDUP
+    FTP command instead of "CWD ..", since it seems to be more
+    widely supported. (knock on wood!)
+
+Changes from 1.8 -> 1.9:
+  Added new example "TESTMIROUT" which demonstrates copying a
+    directory tree from your local AS/400 to a remote server
+  Added new example "TESTMIRIN" which demonstrates copying a
+    directory tree from a remote FTP server to your AS/400
+
+Changes from 1.7 -> 1.8:
+  Fixed bug in FTP_rtvcwd() which caused parsing the directory name
+  to fail.   Thanks go to Jozsef Petrovszki for reporting this.
+
+Changes from 1.6 -> 1.7:
+  Added support for 250 responses from the STOR & RETR (put & get)
+    FTP commands.  Previously, we were only checking 226 which is
+    not correct.
+
+Changes from 1.5 -> 1.6:
+  Added another example program, TESTXPROC to demonstrate showing
+    the transfer progress.
+ All of the following improvements were submitted by Thomas Raddatz.
+ Thank you, Thomas!
+    Introduced new constants to support the default code pages
+       used by IBM's FTP command.  The constants are FTP_ASC_CP (00819)
+       and FTP_EBC_CP (job CCSID).  To use them, call FTP_Codepg like
+       this:  callp     ftp_codepg(FTP_ASC_CP: FTP_EBC_CP)
+    Added an (optional) second parameter to the FTP_EXTSTS exit
+       procedure which represents the total size of the file
+       being transferred (if it's available)
+    Fixed FTP_Conn when connecting to an FTP server that does
+       not require a password.
+    Fixed bug when sending NAMEFMT 0, etc, where the 0 was being
+       converted to a blank
+    Added capability to distribute source using Craig Rutledge's
+       "XMLGEN" utility.
+
+Changes from 1.4 -> 1.5:
+    Added a "timeout" value to FTP_conn.  If you set it, an error
+    will be returned if data is expected, and not received within
+    the specified number of seconds.
+
+Changes from 1.3 -> 1.4:
+    Added some (experimental/untested) support for the "125" response
+       to STOR, APPE, LIST, NLST and RETR operations
+    Fixed minor bug in Reply() procedure.
+
+Changes from 1.2 -> 1.3:
+    Added the FTP_append and FTP_appraw procedures to implement
+       the FTP 'APPE' op-code.
+    Added another example program 'TESTAPP' to demonstrate appending.
+    Added another service program signature (to support backwards
+       compatibility with versions 1.0 and 1.1/1.2)
+
+
+Changes from 1.1 -> 1.2:
+    Fixed bug where we weren't properly checking for errors in
+       the Reply() procedure
+    Added the creation of a binding directory called 'FTPAPI'
+       when the INSTALL pgm is run.
+    Changed RecvLine() procedure to return the error message
+       from strerror() when recv exits with an error.
+    Changed location of QSRVSRC built during INSTALL to
+       be in LIBFTP instead of QTEMP.  This way, I don't have
+       to copy it to QTEMP each time I rebuild the *srvpgm.
+
+
+Changes from 1.0 -> 1.1: (Added 2500+ lines of code!)
+    Fixed misc small bugs
+    Added detection of record-based files vs. stream files, and
+       use the appropriate read/write methods for each type.
+       (which allows SAVF's to be transferred, as well as giving
+       us better control over databases and source files)
+    Added ftp_codepg() procedure, and routines to xlate ebcdic-ascii
+    Added ftp_xproc() to allow registering of exit procedures for
+       some functions (FTP_EXTSTS, FTP_EXTLOG)
+    Fixed logging so passwords are not visible in logs.

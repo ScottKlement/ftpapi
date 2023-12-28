@@ -1,0 +1,1235 @@
+     *-                                                                            +
+     * Copyright (c) 2001-2021 Scott C. Klement                                    +
+     * All rights reserved.                                                        +
+     *                                                                             +
+     * Redistribution and use in source and binary forms, with or without          +
+     * modification, are permitted provided that the following conditions          +
+     * are met:                                                                    +
+     * 1. Redistributions of source code must retain the above copyright           +
+     *    notice, this list of conditions and the following disclaimer.            +
+     * 2. Redistributions in binary form must reproduce the above copyright        +
+     *    notice, this list of conditions and the following disclaimer in the      +
+     *    documentation and/or other materials provided with the distribution.     +
+     *                                                                             +
+     * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+     * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+     * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+     * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+     * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+     * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+     * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+     * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+     * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+     * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+     * SUCH DAMAGE.                                                                +
+     *                                                                             +
+     */                                                                            +
+
+     *
+     * This file contains constants and prototypes necessary for calling
+     * routines in the FTPAPI service program.
+     *
+
+     D FTPAPI_VERSION  C                   CONST('2.5')
+     D FTPAPI_RELDATE  C                   CONST('2023-07-25')
+
+     **********************************************************************
+     *  Exit Points for ftp_xproc()
+     **********************************************************************
+     D FTP_EXTLOG      C                   CONST(1)
+     D FTP_EXTSTS      C                   CONST(2)
+
+     * Default port for FTP control connections:
+     D FTP_PORT        C                   CONST(21)
+     D FTP_FAIL        C                   CONST(-1)
+
+     **********************************************************************
+     *  Code pages for FTP_codepg()
+     **********************************************************************
+     ** Default remote codepage of FTP command (ASCII codepage)
+     D FTP_ASC_CP      C                   CONST(00819)
+     ** Default local codepage  of FTP command (EBCDIC codepage)
+     D FTP_EBC_CP      C                   CONST(-1)
+
+     **********************************************************************
+     *  These constants correspond to error messages that can be returned
+     **********************************************************************
+     * write procedure returned an error while doing a GET ASCII
+     D FTP_GETAWR      C                   CONST(1)
+     * write procedure returned an error while doing a GET BINARY
+     D FTP_GETBWR      C                   CONST(2)
+     * send procedure returned an error while doing a PUT
+     D FTP_PUTBSD      C                   CONST(3)
+     * Bad IP address / Host Not found
+     D FTP_BADIP       C                   CONST(4)
+     * Invalid Login Password (or name?)
+     D FTP_BADPAS      C                   CONST(5)
+     * Invalid response from FTP server
+     D FTP_BADRES      C                   CONST(6)
+     * Invalid response to FTP RETR (get) command
+     D FTP_BADRTR      C                   CONST(7)
+     * Invalid response to FTP STOR (put) command
+     D FTP_BADSTO      C                   CONST(8)
+     * Invalid user name
+     D FTP_BADUSR      C                   CONST(9)
+     * Connection dropped
+     D FTP_DISCON      C                   CONST(10)
+     * Error accepting data connection
+     D FTP_DTAACC      C                   CONST(11)
+     * Error binding data connection
+     D FTP_ERRBND      C                   CONST(12)
+     * Error connecting to host (can be control or data)
+     D FTP_ERRCON      C                   CONST(13)
+     * Error changing working directory
+     D FTP_ERRCWD      C                   CONST(14)
+     * Error creating a new socket
+     D FTP_ERRSKT      C                   CONST(15)
+     * Error setting file transfer type
+     D FTP_ERRTYP      C                   CONST(16)
+     * Error getting local port number
+     D FTP_GETPRT      C                   CONST(17)
+     * Error getting IP address for local interface
+     D FTP_GETSNM      C                   CONST(18)
+     * Unable to listen to port
+     D FTP_LSTERR      C                   CONST(19)
+     * Server does not properly understand passive mode
+     D FTP_PASERR      C                   CONST(20)
+     * Unable to find connection details in passive response
+     D FTP_PASRPY      C                   CONST(21)
+     * Invalid Setting (must be *ON or *OFF)
+     D FTP_PESETT      C                   CONST(22)
+     * Server didnt like the "PORT" command we sent
+     D FTP_PRTERR      C                   CONST(23)
+     * Unable to build the PORT string (probably an internal error)
+     D FTP_PRTSTR      C                   CONST(24)
+     * FTP server returned an invalid starting response
+     D FTP_STRRES      C                   CONST(25)
+     * File transfer did not complete normally.
+     D FTP_XFRERR      C                   CONST(26)
+     * Unable to open the local file...
+     D FTP_OPNERR      C                   CONST(27)
+     * Bad response to LIST command...
+     D FTP_BADLST      C                   CONST(28)
+     * No such file or directory....
+     D FTP_NOFILE      C                   CONST(29)
+     * Bad response to NLST command...
+     D FTP_BADNLS      C                   CONST(30)
+     * Invalid "rename-from" name or file not found
+     D FTP_RNFERR      C                   const(31)
+     * Invalid "rename-to" name or file exists
+     D FTP_RNTERR      C                   const(32)
+     * Unable to delete file
+     D FTP_DELERR      C                   const(33)
+     * Unable to remove directory
+     D FTP_RMDERR      C                   const(34)
+     * Unable to create directory
+     D FTP_MKDERR      C                   const(35)
+     * Unable to get current working dir
+     D FTP_PWDERR      C                   const(36)
+     * Unable to parse response to PWD command
+     D FTP_DIRPRS      C                   const(37)
+     * Unable to retrieve file size
+     D FTP_SIZERR      C                   const(38)
+     * Unable to parse file size response
+     D FTP_SIZPRS      C                   const(39)
+     * Unable to retroeve modification time
+     D FTP_MODERR      C                   const(40)
+     * Unable to parse modification time
+     D FTP_MODPRS      C                   const(41)
+     * Unable to add physical file member
+     D FTP_ADMERR      C                   const(42)
+     * Unable to add variable len PF member
+     D FTP_ADVERR      C                   const(43)
+     * Unable create library
+     D FTP_CRLERR      C                   const(44)
+     * Unable create physical file
+     D FTP_CRPERR      C                   const(45)
+     * Unable create source physical file
+     D FTP_CRSERR      C                   const(46)
+     * Unable delete file
+     D FTP_DLFERR      C                   const(47)
+     * Unable delete library
+     D FTP_DLLERR      C                   const(48)
+     * Remote Command has failed.
+     D FTP_RCMERR      C                   const(49)
+     * Unable to set new name format.
+     D FTP_NMFERR      C                   const(50)
+     * No command was supplied to be run
+     D FTP_NOCMD       C                   const(51)
+     * Text of QUOTE Reply Message
+     D FTP_QTEMSG      C                   const(52)
+     * SAVF must be transferred in BINARY mode
+     D FTP_SAVBIN      C                   const(53)
+     * Source members must be transferred in ASCII mode
+     D FTP_SRCASC      C                   const(54)
+     * You can't transfer files of that type!
+     D FTP_INVFIL      C                   const(55)
+     * User spaces need BINARY mode
+     D FTP_USPBIN      C                   const(56)
+     * Can't transfer an object of that type
+     D FTP_INVOBJ      C                   const(57)
+     * Unable to build a save file to receive data into
+     D FTP_BLDSAV      C                   const(58)
+     * Unable to build a physical file to receive data into
+     D FTP_BLDPF       C                   const(59)
+     * Unable to add a new member onto that file
+     D FTP_ADPFER      C                   const(60)
+     * ROPEN failed for that file (reading)
+     D FTP_ROPENR      C                   const(61)
+     * ROPEN failed for that file (writing)
+     D FTP_ROPENW      C                   const(62)
+     * UNKNOWN/programmer error
+     D FTP_UNKNWN      C                   const(63)
+     * Unable to read the object description
+     D FTP_RTVOBJ      C                   const(64)
+     * Unable to read the member description
+     D FTP_RTVMBR      C                   const(65)
+     * Error parsing IFS path
+     D FTP_PRSERR      C                   const(66)
+     * Error returned by lstat
+     D FTP_LSTAT       C                   const(67)
+     * Invalid Exit Point
+     D FTP_BADPNT      C                   const(68)
+     * Unable to clear existing save file
+     D FTP_CLRSAV      C                   const(69)
+     * Invalid response to FTP APPE (append) command
+     D FTP_BADAPP      C                   CONST(70)
+     * Time-out occurred
+     D FTP_TIMOUT      C                   CONST(71)
+     * Server did not like the account we sent to it
+     D FTP_BADACT      C                   CONST(72)
+     * Can not create new session handle                                                     RADDAT
+     D FTP_CRTHDL      C                   CONST(73)                                          RADDAT
+     * Session handle not found                                                              RADDAT
+     D FTP_BADHDL      C                   CONST(74)                                          RADDAT
+     * Invalid session index                                                                 RADDAT
+     D FTP_BADIDX      C                   CONST(75)                                          RADDAT
+     * Invalid URL specified                                                                 RADDAT
+     D FTP_BADURL      C                   CONST(76)                                          RADDAT
+     * Error in response to FTP NOOP operation                                               RADDAT
+     D FTP_NOOPERR     C                   CONST(77)                                          RADDAT
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_Conn:  Connect and log-in to an FTP server.
+     *
+     *     peHost = Host name of FTP server
+     *     peUser = user name of FTP server (or "anonymous")
+     *     pePass = Password to use on FTP server (or "user@host")
+     *     pePort = (optional) port to connect to.  If not supplied
+     *              the value of the constant FTP_PORT will be used.
+     *  peTimeout = (optional) number of seconds to wait for data before
+     *              assuming the connection is dead and giving up.
+     *              if not given, or set to 0, we wait indefinitely.
+     *     peAcct = (optional) account (if required by server)
+     *              if not given, a blank account name will be tried
+     *              if the server requests an account.
+     *
+     * Returns the socket descriptor of the connection upon
+     *            success, or -1 upon error.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_Conn        PR            10I 0
+     D   peHost                     256A   const
+     D   peUser                      32A   const
+     D   pePass                      64A   const
+     D   pePort                      10I 0 value options(*nopass)
+     D   peTimeout                   10I 0 value options(*nopass)
+     D   peAcct                      32A   const options(*nopass)
+     D FTP_ConnLong    PR            10I 0
+     D   peHost                     256A   const
+     D   peUser                    1000A   const
+     D   pePass                    1000A   const
+     D   pePort                      10I 0 value options(*nopass)
+     D   peTimeout                   10I 0 value options(*nopass)
+     D   peAcct                    1000A   const options(*nopass)
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  Change directory on FTP server
+     *
+     *       input:   peSocket = descriptor returned by ftp_conn                             RADDAT
+     *                peNewDir = directory to change to.                                     RADDAT
+     *
+     *  returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_chdir       PR            10I 0
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   peNewDir                   256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *      Deprecated. See: FTP_binaryMode                                                  RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  FTP_binary:  Set file transfer mode to/from binary mode
+     *
+     *    peSetting = Setting of binary  *ON = Turn binary mode on
+     *                                  *OFF = Turn binary mode off.
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_binary      PR            10I 0
+     D   peSetting                    1A   const
+                                                                                              RADDAT
+                                                                                              RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  FTP_binaryMode:  Set file transfer mode to/from binary mode                          RADDAT
+     *                                                                                       RADDAT
+     *    peSocket  = socket number returned by FTP_conn                                     RADDAT
+     *    peSetting = Setting of binary  *ON = Turn binary mode on                           RADDAT
+     *                                  *OFF = Turn binary mode off.                         RADDAT
+     *                                                                                       RADDAT
+     *     Returns -1 upon error, or 0 upon success.                                         RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     D FTP_binaryMode  PR            10I 0                                                    RADDAT
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   peSetting                    1A   const                                              RADDAT
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *      Deprecated. See: FTP_lineMode                                                    RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  FTP_LinMod:  Allows file transfer of a text file in line
+     *                   at a time mode.
+     *
+     *    peSetting = Setting of line mode  *ON = Turn line mode on
+     *                                     *OFF = Turn line mode off.
+      *
+      *     peRecLen = (optional) Size of each record (if peSetting='R')
+      *                [you do not need to specify a record length unless]
+      *                [you're calling FTP_getraw().                     ]
+     *
+     *  Line-At-A-Time mode is only allowed on text files.  When
+     *  using line mode, each string returned will be one line of
+     *  text from the file.  The text will automatically be converted
+     *  from ASCII -> EBCDIC, and any CR or LF characters will be
+     *  stripped from the record.
+     *
+     *  Line mode is MUCH slower than normal("block") mode, and should
+     *  only be used if the contents are the file are to be examined
+     *  line-by-line as the data is being downloaded.
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_LinMod      PR            10I 0
+     D   peSetting                    1A   const
+     D   peRecLen                     5I 0 value options(*nopass)
+                                                                                              RADDAT
+                                                                                              RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  FTP_lineMode:    Allows file transfer of a text file in line                         RADDAT
+     *                   at a time mode.                                                     RADDAT
+     *                                                                                       RADDAT
+     *    peSocket  = socket number returned by FTP_conn                                     RADDAT
+     *    peSetting = Setting of line mode  *ON = Turn line mode on                          RADDAT
+     *                                     *OFF = Turn line mode off.                        RADDAT
+      *     peRecLen = (optional) Size of each record (if peSetting='R')
+      *                [you do not need to specify a record length unless]
+      *                [you're calling FTP_getraw().                     ]
+     *                                                                                       RADDAT
+     *  Line-At-A-Time mode is only allowed on text files.  When                             RADDAT
+     *  using line mode, each string returned will be one line of                            RADDAT
+     *  text from the file.  The text will automatically be converted                        RADDAT
+     *  from ASCII -> EBCDIC, and any CR or LF characters will be                            RADDAT
+     *  stripped from the record.                                                            RADDAT
+     *                                                                                       RADDAT
+     *  Line mode is MUCH slower than normal("block") mode, and should                       RADDAT
+     *  only be used if the contents are the file are to be examined                         RADDAT
+     *  line-by-line as the data is being downloaded.                                        RADDAT
+     *                                                                                       RADDAT
+     *     Returns -1 upon error, or 0 upon success.                                         RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     D FTP_lineMode    PR            10I 0                                                    RADDAT
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   peSetting                    1A   const                                              RADDAT
+     D   peRecLen                     5I 0 value options(*nopass)
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *      Deprecated. See: FTP_passiveMode                                                 RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  FTP_passiv:   Turn passive mode transfers on or off
+     *
+     *     peSetting = passive mode setting.   *ON = Turn passive on
+     *                                        *OFF = Turn passive off
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *
+     * Note that this does not detect if the server supports
+     *    passive mode.  That will be done when the file transfer
+     *    commences...
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_passiv      PR            10I 0
+     D   peSetting                    1A   const
+                                                                                              RADDAT
+                                                                                              RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  FTP_passiveMode: Turn passive mode transfers on or off                               RADDAT
+     *                                                                                       RADDAT
+     *    peSocket  = socket number returned by FTP_conn                                     RADDAT
+     *    peSetting = passive mode setting.   *ON = Turn passive on                          RADDAT
+     *                                       *OFF = Turn passive off                         RADDAT
+     *                                                                                       RADDAT
+     *    Returns -1 upon error, or 0 upon success.                                          RADDAT
+     *                                                                                       RADDAT
+     * Note that this does not detect if the server supports                                 RADDAT
+     *    passive mode.  That will be done when the file transfer                            RADDAT
+     *    commences...                                                                       RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     D FTP_passiveMode...                                                                     RADDAT
+     D                 PR            10I 0                                                    RADDAT
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   peSetting                    1A   const                                              RADDAT
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *      Deprecated. See: FTP_logging                                                     RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  FTP_log:  Turn on/off logging of session to joblog
+     *
+     *    peSetting = Setting of logging *ON = Turn logging mode on
+     *                                  *OFF = Turn logging mode off.
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_Log         PR            10I 0
+     D   peSetting                    1A   const
+                                                                                              RADDAT
+                                                                                              RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  FTP_logging:     Turn on/off logging of session to joblog                            RADDAT
+     *                                                                                       RADDAT
+     *    peSocket  = socket number returned by FTP_conn                                     RADDAT
+     *    peSetting = Setting of logging *ON = Turn logging mode on                          RADDAT
+     *                                  *OFF = Turn logging mode off.                        RADDAT
+     *                                                                                       RADDAT
+     *     Returns -1 upon error, or 0 upon success.                                         RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     D FTP_logging     PR            10I 0                                                    RADDAT
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   peSetting                    1A   const                                              RADDAT
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_rename:   Rename a file on an FTP server
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *    peOldName = Original File Name
+     *    peNewName = New name to assign.
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_rename      PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peOldName                  256A   const
+     D   peNewName                  256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_delete:   Delete a file on the FTP server
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *       peFile = File to delete
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_delete      PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peFile                     256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_rmdir:  Delete a directory from an FTP server
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *    peDirName = directory to delete
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_rmdir       PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peDirName                  256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_mkdir:  Create a directory on the FTP server
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *    peDirName = directory to create
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_mkdir       PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peDirName                  256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_rtvcwd:  Retrieve the current working directory name
+     *         from the server.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *
+     *     Returns the directory name, or *BLANKS upon failure
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_rtvcwd      PR           256A
+     D   peSocket                    10I 0 value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_quote:  Send a raw, unadulterated, command to the
+     *         FTP server, and receive the reply.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *    peCommand = command to send to server.
+     *
+     *     Returns the FTP server's reply code,
+     *             or -1 upon a socket/network error.
+     *
+     *  This procedure will not attempt to determine if the quoted
+     *  command was successful.  You'll need to check the FTP
+     *  server's reply code to see if you get what you expect to.
+     *
+     *  The message text accompanying the reply code will be available
+     *  by calling the FTP_ERROR routine.  The error number returned
+     *  for this response will always be FTP_QUOTE
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_quote       PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peCommand                  256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_size:  Get the size of a file on an FTP server.
+     *
+     * NOTE: This is not part of the official FTP standard, and
+     *       is not supported by many FTP servers, INCLUDING THE
+     *       AS/400 FTP SERVER.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *       peFile = file to look up the size of
+     *
+     *     Returns -1 upon error, or the size of the file upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_size        PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peFile                     256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_mtime: Get modification time of a file on an FTP server
+     *
+     * NOTE: This is not part of the official FTP standard, and
+     *       is not supported by many FTP servers, INCLUDING THE
+     *       AS/400 FTP SERVER.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *       peFile = file to look up the size of
+     *    peModTime = Modification time returned by server
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_mtime       PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peFile                     256A   const
+     D   peModTime                     Z
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_AddPfm:  Add member to a physical file (ADDPFM)
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *      peParms = String of parms to the ADDPFM command on
+     *                 on the AS/400.
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_AddPfm      PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peParms                    256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_AddPvm:  Add variable length file member (ADDPVLM)
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *      peParms = String of parms to the ADDPVLM command
+     *                 on the AS/400.
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_AddPvm      PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peParms                    256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_CrtLib:  Create Library (CRTLIB)
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *      peParms = String of parms to the CRTLIB command
+     *                 on the AS/400.
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_CrtLib      PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peParms                    256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_CrtPf:  Create Physical File (CRTPF)
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *      peParms = String of parms to the CRTPF command
+     *                 on the AS/400.
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_CrtPF       PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peParms                    256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_CrtSrc:  Create Source Physical File (CRTSRCPF)
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *      peParms = String of parms to the CRTSRCPF command
+     *                 on the AS/400.
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_CrtSrc      PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peParms                    256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_DltF:  Delete File (DLTF)
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *      peParms = String of parms to the DLTF command
+     *                 on the AS/400.
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_DltF        PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peParms                    256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_DltLib:  Delete Library (DLTLIB)
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *      peParms = String of parms to the DLTF command
+     *                 on the AS/400.
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_DltLib      PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peParms                    256A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_RmtCmd:  Run a command on the AS/400
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     * NOTE: Commands executed this way may be run in batch as
+     *       a seperate job, and may not complete immediately.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *    peCommand = Command to run on the AS/400.
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_RmtCmd      PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peCommand                 1000A   const
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_NamFmt:  Set the AS/400's Name Format (NAMEFMT) parm
+     *
+     * NOTE: This command is specific to the AS/400 FTP server
+     *       and may not work on other systems.
+     *
+     *     peSocket = socket number returned by FTP_conn
+     *     peFormat = Name Fmt  0=MYLIB/MYFILE.MYMBR
+     *                          1=/Filesys/MYLIB.LIB/MYFILE.FILE/MYMBR.MBR
+     *
+     *     Returns -1 upon error, or 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_NamFmt      PR            16P 0
+     D   peSocket                    10I 0 value
+     D   peFormat                     5I 0 value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_dir   Gets a listing of files in a directory on the
+     *               FTP server.
+     *
+     *         peSocket = descriptor returned by ftp_conn proc.                              RADDAT
+     *      pePathArg   = Argument to pass to the LIST command on                            RADDAT
+     *                    the FTP server.  for example, it might be                          RADDAT
+     *                    something like '*.txt' or '/windows/*.exe'                         RADDAT
+     *     peMaxEntry   = max number of directory entries to return                          RADDAT
+     *      peRtnList   = pointer to an array.  Each line of the directory                   RADDAT
+     *                    returned by the server will be placed into this
+     *                    array, up to the max number of entries (above)
+     *      peRtnSize   = Actual number of array elements that could be                      RADDAT
+     *                    returned.  (can be larger than peMaxEntry if
+     *                    your array wasnt large enough)
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_dir         PR            10I 0
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   pePathArg                  256A   const
+     D   peMaxEntry                  10I 0 value
+     D   peRtnList                     *   value
+     D   peRtnSize                   10I 0
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_dirraw:  Gets a listing of files in a directory on the
+     *               FTP server.
+     *
+     *         peSocket = descriptor returned by ftp_conn proc.                              RADDAT
+     *      pePathArg   = Argument to pass to the LIST command on                            RADDAT
+     *                    the FTP server.  for example, it might be                          RADDAT
+     *                    something like '*.txt' or '/windows/*.exe'                         RADDAT
+     *        peDescr   = descriptor to pass to peFunction below                             RADDAT
+     *     peFunction   = procedure to call for each directory entry                         RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_dirraw      PR            10I 0
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   pePathArg                  256A   const
+     D   peDescr                     10I 0 value
+     D   peFunction                    *   PROCPTR value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_list: Gets a listing of files in a directory on the
+     *               FTP server. (filenames only)
+     *
+     *         peSocket = descriptor returned by ftp_conn proc.                              RADDAT
+     *      pePathArg   = Argument to pass to the NLST command on                            RADDAT
+     *                    the FTP server.  for example, it might be                          RADDAT
+     *                    something like '*.txt' or '/windows/*.exe'                         RADDAT
+     *     peMaxEntry   = max number of directory entries to return                          RADDAT
+     *      peRtnList   = pointer to an array.  Each filename in the dir                     RADDAT
+     *                    returned by the server will be placed into this
+     *                    array, up to the max number of entries (above)
+     *      peRtnSize   = Actual number of array elements that could be                      RADDAT
+     *                    returned.  (can be larger than peMaxEntry if
+     *                    your array wasnt large enough)
+     *
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_list        PR            10I 0
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   pePathArg                  256A   const
+     D   peMaxEntry                  10I 0 value
+     D   peRtnList                     *   value
+     D   peRtnSize                   10I 0
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_lstraw: Gets a listing of files in a directory on the
+     *               FTP server. (filenames only)
+     *
+     *         peSocket = descriptor returned by ftp_conn proc.                              RADDAT
+     *      pePathArg   = Argument to pass to the LIST command on                            RADDAT
+     *                    the FTP server.  for example, it might be                          RADDAT
+     *                    something like '*.txt' or '/windows/*.exe'                         RADDAT
+     *        peDescr   = descriptor to pass to peFunction below                             RADDAT
+     *     peFunction   = Procedure to send each line of the resulting                       RADDAT
+     *                    listing to.                                                        RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_lstraw      PR            10I 0
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   pePathArg                  256A   const
+     D   peDescr                     10I 0 value
+     D   peFunction                    *   PROCPTR value
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      * FTP_Get(): Retrieve a file from FTP server
+      *
+      *  peSocket = Session ID returned by FTP_open / FTP_Conn
+      *  peRemote = filename to request from FTP server.
+      *   peLocal = filename to store file on local server.
+      *             (MUST BE IN IFS-STYLE FORMAT = NAMEFMT 1)
+      *             If not passed, the peRemote filename is used.
+      *
+      *   returns -1 upon error, or 0 upon success.
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_get         PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peRemote                   256A   const
+     D   peLocal                    256A   const options(*nopass)
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_getraw:   Get a file *from* the FTP server.
+     *
+     *       peSocket = descriptor returned by ftp_conn proc.
+     *      peRemote = Remote filename to request.
+     *       peDescr = descriptor to pass to the peRetProc procedure
+     *     peWrtProc = Procedure to send the received data to.
+     *         int writeproc(int fd, void *buf, int nbytes);
+     *
+     * Note that the format for the writeproc very deliberately
+     *    matches that of the write() API, allowing us to write
+     *    directly to the IFS or a socket just by passing that
+     *    procedure.
+     *
+     *  returns 0 upon success, or -1 upon error.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_getraw      PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peRemote                   256A   const
+     D   peDescr                     10I 0 value
+     D   peWrtProc                     *   PROCPTR value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * Send a file to FTP server:
+     *
+     *    parms:    peSocket = descriptor returned by ftp_conn
+     *              peRemote = filename of file on remote server
+     *               peLocal = filename on this server (optional)
+     *                     if not given, we'll assume that its the
+     *                     same as the local server's filename.
+     *
+     *   returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_put         PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peRemote                   256A   const
+     D   peLocal                    256A   const options(*nopass)
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_putraw:   Put a file *to* the FTP server.
+     *
+     *       peSocket = descriptor returned by ftp_conn proc.
+     *      peRemote = Remote filename to request.
+     *       peDescr = descriptor to pass to the peReadProc procedure
+     *    peReadProc = Procedure to call to read more data from
+     *         int readproc(int fd, void *buf, int nbytes);
+     *
+     * Note that the format for the readproc very deliberately
+     *    matches that of the write() API, allowing us to write
+     *    directly to the IFS or a socket just by passing that
+     *    procedure.
+     *
+     *  returns 0 upon success, or -1 upon error.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_putraw      PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peRemote                   256A   const
+     D   peDescr                     10I 0 value
+     D   peReadProc                    *   PROCPTR value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * Add a file to the end of one that is on an FTP server:
+     *
+     *    parms:    peSocket = descriptor returned by ftp_conn
+     *              peRemote = filename of file on remote server
+     *               peLocal = filename on this server (optional)
+     *                     if not given, we'll assume that its the
+     *                     same as the local server's filename.
+     *
+     *   returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_append      PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peRemote                   256A   const
+     D   peLocal                    256A   const options(*nopass)
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_appraw:  Append a file *to* the FTP server.
+     *
+     *       peSocket = descriptor returned by ftp_conn proc.
+     *      peRemote = Remote filename to request.
+     *       peDescr = descriptor to pass to the peReadProc procedure
+     *    peReadProc = Procedure to call to read more data from
+     *         int readproc(int fd, void *buf, int nbytes);
+     *
+     * Note that the format for the readproc very deliberately
+     *    matches that of the write() API, allowing us to write
+     *    directly to the IFS or a socket just by passing that
+     *    procedure.
+     *
+     *  returns 0 upon success, or -1 upon error.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_appraw      PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peRemote                   256A   const
+     D   peDescr                     10I 0 value
+     D   peReadProc                    *   PROCPTR value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_quit:
+     *        parms:   peSocket = descriptor returned by ftp_conn
+     *
+     *  This procedure logs off of the FTP server and closes
+     *  the network connection.
+     *
+     *  Returns 0 upon success, or -1 upon error.                                            RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_quit        PR            10I 0                                                    RADDAT
+     D   peSocket                    10I 0 value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *      Deprecated. See: FTP_errorMsg                                                    RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  returns the error message that occurred when one of the
+     *  above routines return -1.
+     *
+     *  optionally also returns the error number, which will
+     *  match one of the constants defined in FTPAPI_H.  This
+     *  can be used by programs to anticipate/handle errors.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_error       PR            60A
+     D   peErrorNum                  10I 0 options(*nopass)
+                                                                                              RADDAT
+                                                                                              RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  returns the error message that occurred when one of the                              RADDAT
+     *  above routines return -1.                                                            RADDAT
+     *                                                                                       RADDAT
+     *    peSocket  = socket number returned by FTP_conn                                     RADDAT
+     *                                                                                       RADDAT
+     *  optionally also returns the error number, which will                                 RADDAT
+     *  match one of the constants defined in FTPAPI_H.  This                                RADDAT
+     *  can be used by programs to anticipate/handle errors.                                 RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     D FTP_errorMsg    PR            60A                                                      RADDAT
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   peErrorNum                  10I 0       options(*nopass)                             RADDAT
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *      Deprecated. See: FTP_codePage                                                    RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  Set file translation options for ASCII mode:
+     *
+     *     peASCII -- codepage to use when translating to/from ASCII
+     *     peEBCDIC -- codepage to use when translating to/from EBCDIC
+     *
+     *  Return 0 for success, -1 upon error
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_codepg      PR            10I 0
+     D   peASCII                     10I 0 value
+     D   peEBCDIC                    10I 0 value
+                                                                                              RADDAT
+                                                                                              RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     *  Set file translation options for ASCII mode:                                         RADDAT
+     *                                                                                       RADDAT
+     *    peSocket  = socket number returned by FTP_conn                                     RADDAT
+     *    peASCII   = codepage to use when translating to/from ASCII                         RADDAT
+     *    peEBCDIC  = codepage to use when translating to/from EBCDIC                        RADDAT
+     *                                                                                       RADDAT
+     *  Return 0 for success, -1 upon error                                                  RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     D FTP_codePage    PR            10I 0                                                    RADDAT
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   peASCII                     10I 0 value                                              RADDAT
+     D   peEBCDIC                    10I 0 value                                              RADDAT
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *      Deprecated. See: FTP_exitProc()                                                  RADDAT
+      *
+      * WARNING: For backwards compatiblity, FTP_xproc() changes the
+      *   exit procedure for ALL sessions.  Instead, use FTP_exitProc!
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     * FTP_xproc:  Register a procedure to be called at a given
+     *        exit point:
+     *
+     *     peExitPnt = Exit point to register a procedure for
+     *           FTP_EXTLOG = Procedure to call when logging control
+     *                   session commands.
+     *           FTP_EXTSTS = Procedure to call when showing the
+     *                   current status of a file transfer.
+     *     peProc    = Procedure to register (pass *NULL to disable)
+     *
+     *  Returns -1 upon error, 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_xproc       PR            10I 0
+     D   peExitPnt                   10I 0 value
+     D   peProc                        *   procptr value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     * FTP_exitProc: Register a procedure to be called at a given
+     *               exit point:
+      *
+      *    ** PLEASE DO NOT USE FTP_CONN WITH FTP_EXITPROC **
+      *
+      *    FTP_Conn() is a combination of calling FTP_open() followed
+      *    by FTP_login().  However, you need to register your exit
+      *    proc in-between those two calls.
+      *
+      *    Instead of FTP_Conn, follow these steps:
+      *         1) Call FTP_open() to connect to your FTP server.
+      *         2) Call FTP_exitProc() and register the proc with
+      *              the session number returned by FTP_open()
+      *         3) Call FTP_login() to complete the login process.
+      *
+     *  parameters are:
+      *     peSession = FTP session handle returned by FTP_open()
+     *     peExitPnt = Exit point to register a procedure for
+     *           FTP_EXTLOG = Procedure to call when logging control
+     *                   session commands.
+     *           FTP_EXTSTS = Procedure to call when showing the
+     *                   current status of a file transfer.
+     *     peProc    = Procedure to register (pass *NULL to disable)
+      *    peExtra    = pointer to extra data you want passed to each
+      *                   call of your exit proc, or *NULL for none.
+     *
+     *  Returns -1 upon error, 0 upon success
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_exitProc    PR            10I 0
+     D   peSession                   10I 0 value
+     D   peExitPnt                   10I 0 value
+     D   peProc                        *   procptr value
+     D   peExtra                       *   value
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *      Deprecated. See: FTP_trimMode                                                    RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     * FTP_trim:  Set the "trim mode" for record-based files that
+     *            you PUT in ASCII (non-binary) mode.
+     *
+     *  Note that this has no affect on GETs, binary-mode transfers,
+     *       stream files, or source members.
+     *
+     *     peSetting = Should be *ON if you want trailing blanks
+     *           to be trimmed, or *OFF otherwise.  *OFF is used
+     *           by default
+     *
+     *  returns 0 upon success, or -1 upon error.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_trim        PR            10I 0
+     D   peSetting                    1A   const
+                                                                                              RADDAT
+                                                                                              RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     * FTP_trimMode:     Set the "trim mode" for record-based files                          RADDAT
+     *                   that you PUT in ASCII (non-binary) mode.                            RADDAT
+     *                                                                                       RADDAT
+     *  Note that this has no affect on GETs, binary-mode transfers,                         RADDAT
+     *       stream files, or source members.                                                RADDAT
+     *                                                                                       RADDAT
+     *    peSocket  = socket number returned by FTP_conn                                     RADDAT
+     *    peSetting = Should be *ON if you want trailing blanks                              RADDAT
+     *           to be trimmed, or *OFF otherwise.  *OFF is used                             RADDAT
+     *           by default                                                                  RADDAT
+     *                                                                                       RADDAT
+     *  returns 0 upon success, or -1 upon error.                                            RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        RADDAT
+     D FTP_trimMode    PR            10I 0                                                    RADDAT
+     D   peSocket                    10I 0 value                                              RADDAT
+     D   peSetting                    1A   const                                              RADDAT
+                                                                                              RADDAT
+                                                                                              RADDAT
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *  FTP_sizereq:  Turn Size request on or off
+      *
+      *  Normally, FTPAPI attempts to determine the size of a file
+      *  before downloading it.  You can use this function to disable
+      *  or re-enable that functionality.
+     *
+     *     peSetting =   *ON = Turn size request on
+     *                  *OFF = Turn size request off
+     *
+     *     Returns -1 upon error, or 0 upon success.
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_sizereq     PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peSetting                    1A   const
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      *  FTP_ParseURL(): Parse URL into it's component parts
+      *
+      *  Breaks a uniform resource locator (URL) into it's component
+      *  pieces for use with the ftp: protocols.
+      *
+      *  peURL = URL that needs to be parsed.
+      *  peService = service name from URL (i.e. ftp)
+      *  peUserName = user name given, or *blanks
+      *  pePassword = password given, or *blanks
+      *  peHost = hostname given in URL. (could be domain name or IP)
+      *  pePort = port number to connect to, if specified, otherwise 0.
+      *  pePath = remaining path/request for server.
+      *
+      *  returns -1 upon failure, or 0 upon success
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D ftp_ParseURL    PR            10I 0
+     D  peURL                       256A   const
+     D  peService                    32A
+     D  peUserName                   32A
+     D  pePassword                   32A
+     D  peHost                      256A
+     D  pePort                       10I 0
+     D  pePath                      256A
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      *  FTP_url_get_raw(): Retrieve a file specified via URL
+      *
+      *      peURL = URL to retrieve file from
+      *    peDescr = Descriptor to pass to write proc
+      *  peWrtProc = procedure to call to write file to disk
+      *    peASCII = (optional) Use ASCII mode if *ON
+      *  peTimeout = (optional) time to wait for connection to complete
+      *     peAcct = (optional) account name
+      *
+      *  returns -1 upon failure, or 0 upon success
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_url_get_raw...
+     D                 PR            10I 0
+     D  peURL                       256A   const
+     D  peDescr                      10I 0 value
+     D  peWrtProc                      *   PROCPTR value
+     D  peASCII                       1N   const options(*nopass)
+     D  peTimeout                    10I 0 value options(*nopass)
+     D  peAcct                       32A   const options(*nopass)
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      *  FTP_url_get(): Retrieve a file specified via URL
+      *
+      *      peURL = URL to retrieve file from
+      *    peLocal = (optional) pathname of file to save on local disk
+      *    peASCII = (optional) Use ASCII mode if *ON
+      *  peTimeout = (optional) time to wait for connection to complete
+      *     peAcct = (optional) account name
+      *
+      *  returns -1 upon failure, or 0 upon success
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_url_get     PR            10I 0
+     D  peURL                       256A   const
+     D  peLocal                     256A   const options(*nopass)
+     D  peASCII                       1N   const options(*nopass)
+     D  peTimeout                    10I 0 value options(*nopass)
+     D  peAcct                       32A   const options(*nopass)
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      *  FTP_open(): Open a connection to an FTP server
+     *
+     *     peHost = host to connect to.
+     *     pePort = (optional) port number to connect to.  If not given,
+      *              FTPAPI will use the FTP_PORT constant
+     *  peTimeout = (optional) time to wait for data from server before
+     *              giving up.  (seconds)  default is 0 (wait forever)
+
+     * Returns a new socket, connected to an FTPAPI session.
+     *            or -1 upon error.
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_open        PR            10I 0
+     D   peHost                     256A   const
+     D   pePort                      10I 0 value options(*nopass)
+     D   peTimeout                   10I 0 value options(*nopass)
+
+
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     * FTP_Login(): Log in to an FTP server.
+     *
+      *   peSocket = Socket created with FTP_open()
+     *     peUser = user name of FTP server (or "anonymous")
+     *     pePass = Password to use on FTP server (or "user@host")
+     *     peAcct = (optional) account (if required by server)
+     *              if not given, a blank account name will be tried
+     *              if the server requests an account.
+     *
+     * Returns 0 if successful, -1 upon error
+     *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_Login       PR            10I 0
+     D   peSocket                    10I 0 value
+     D   peUser                      32A   const
+     D   pePass                      64A   const options(*nopass)
+     D   peAcct                      32A   const options(*nopass)
+     D FTP_LoginLong   PR            10i 0
+     D   peSocket                    10i 0 value
+     D   peUser                    1000a   varying const
+     D   pePass                    1000a   varying const options(*nopass)
+     D   peAcct                    1000a   varying const options(*nopass)
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      * FTP_Crash():  Send CPF9897 Escape Message
+      *
+      *    peSocket = (input) socket/session number from FTP_open()
+      *       peMsg = (input/optional) Error message to send
+      *
+      *  If peMsg is not given, the last error message from FTPAPI
+      *  will be used instead.
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_Crash       PR
+     D    peSocket                   10i 0 value
+     D    peMsg                     256a   const options(*nopass)
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      * FTP_Restart(): Restart a previously failed file transfer
+      *                from a given byte position.
+      *
+      *    peSocket = (input) socket/session number from FTP_open()
+      *
+      *      peFile = (input) Calculate the resume position by looking
+      *                       up the length of this file. (Pass *OMIT
+      *                       if you do not want to use this option.)
+      *
+      *       pePos = (input) byte position to resume at (FTPAPI only
+      *                       uses this field if peFile=*OMIT)
+      *
+      *  returns -1 upon error, or 0 if successful
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_Restart     PR            10i 0
+     D    peSocket                   10i 0 value
+     D    peFile                    256A   const options(*omit)
+     D    pePos                      10u 0 const options(*nopass:*omit)
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      *  FTP_noop:  keep connection alive
+      *
+      *     peSession = Session descriptor returned by FTP_Conn
+      *
+      *     Returns -1 upon error, or 0 upon success.
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D FTP_noop        PR            10I 0
+     D   peSession                   10I 0 value

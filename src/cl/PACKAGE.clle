@@ -1,0 +1,135 @@
+/*-                                                                            +
+ * Copyright (c) 2001-2021 Scott C. Klement                                    +
+ * All rights reserved.                                                        +
+ *                                                                             +
+ * Redistribution and use in source and binary forms, with or without          +
+ * modification, are permitted provided that the following conditions          +
+ * are met:                                                                    +
+ * 1. Redistributions of source code must retain the above copyright           +
+ *    notice, this list of conditions and the following disclaimer.            +
+ * 2. Redistributions in binary form must reproduce the above copyright        +
+ *    notice, this list of conditions and the following disclaimer in the      +
+ *    documentation and/or other materials provided with the distribution.     +
+ *                                                                             +
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+ * SUCH DAMAGE.                                                                +
+ *                                                                             +
+ */                                                                            +
+
+PGM
+             DCL VAR(&INSTLIB) TYPE(*CHAR) LEN(10) +
+                 VALUE('LIBFTP')
+             DCL VAR(&SAVF) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL VAR(&ZIP) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL VAR(&TGTRLS) TYPE(*CHAR) LEN(6) VALUE('V7R1M0')
+             DCL VAR(&WRKLIB) TYPE(*CHAR) LEN(10) VALUE('SKLEMENT')
+             DCL VAR(&WRKDIR) TYPE(*CHAR) LEN(50) +
+                 VALUE('/home/sklement')
+             DCL VAR(&WRKDIR2) TYPE(*CHAR) LEN(50) +
+                 VALUE('/home/sklement/ftpapi')
+             DCL VAR(&CMD) TYPE(*CHAR) LEN(200)
+
+   /* DELETE THE MAIN SERVICE PROGRAMS */
+
+             DLTSRVPGM  SRVPGM(&INSTLIB/FTPAPIR4)
+             MONMSG CPF2105
+
+   /* DELETE SAMPLE PROGRAMS */
+
+             DLTPGM     PGM(&INSTLIB/EX1PUT)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EX2APPEND)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EX3GET)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EX4MGET)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EX5XPROC)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EX6TREEFRM)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EX7TREETO)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTAPP)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTGET)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTMGET)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTMIRIN)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTMIROUT)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTPUT)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTURL)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTXPROC)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TEST2SESS)
+             MONMSG CPF2105
+
+   /* DELETE INSTALLER PROGRAMS */
+
+             DLTPGM     PGM(&INSTLIB/INSTALL)
+             MONMSG CPF2105
+
+   /* DELETE BINDING DIRECTORY */
+             DLTBNDDIR BNDDIR(&INSTLIB/FTPAPI)
+             MONMSG CPF2105
+
+   /* DELETE OUR WORK FILE */
+             DLTF       FILE(&INSTLIB/WORK)
+             MONMSG CPF2105
+
+
+   /* SAVE TO SAVE FILE IF IT EXISTS IN SKLEMENT */
+
+             CHKOBJ OBJ(SKLEMENT/FTPAPI) OBJTYPE(*FILE)
+             MONMSG MSGID(CPF9801 CPF9810) EXEC(DO)
+                CHGVAR VAR(&SAVF) VALUE('N')
+             ENDDO
+
+             IF (&SAVF = 'Y') DO
+                 CLRSAVF FILE(SKLEMENT/FTPAPI)
+                 SAVLIB LIB(LIBFTP) DEV(*SAVF) SAVF(SKLEMENT/FTPAPI) +
+                          TGTRLS(&TGTRLS) DTACPR(*YES)
+                 DSPSAVF FILE(SKLEMENT/FTPAPI)
+             ENDDO
+
+             IF (&ZIP = 'Y') DO
+                 CRTPF FILE(&INSTLIB/WORK) RCDLEN(256)
+                 SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) +
+                              MSGDTA('Creating ZIP file' +
+                              *BCAT &WRKDIR *TCAT +
+                              '/ftpapi.zip...') +
+                              TOPGMQ(*EXT) MSGTYPE(*STATUS)
+                 RMVENVVAR  ENVVAR(QIBM_QSH_CMD_OUTPUT)
+                 MONMSG MSGID(CPFA981)
+                 ADDENVVAR  ENVVAR(QIBM_QSH_CMD_ESCAPE_MSG) VALUE(Y) +
+                            REPLACE(*YES)
+                 STRQSH CMD('/qsys.lib/libftp.lib/qsh.file+
+                            /mkzip.mbr')
+                 DLTF FILE(&INSTLIB/WORK)
+                 CHGVAR VAR(&CMD) VALUE('cd' *BCAT &WRKDIR2 *BCAT '&& +
+                                   7z a -tzip -r ../ftpapi.zip *')
+                 CALL QP2SHELL PARM('/QOpenSys/usr/bin/sh' '-c' &CMD)
+             ENDDO
+
+
+   /* RE-BUILD FTPAPI OBJECTS */
+
+             CRTCLPGM PGM(INSTALL) SRCFILE(&INSTLIB/QCLSRC)
+             CALL PGM(INSTALL) parm(&INSTLIB)
+
+
+ENDPGM

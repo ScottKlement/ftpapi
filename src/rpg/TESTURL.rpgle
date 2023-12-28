@@ -1,0 +1,52 @@
+      *-                                                                            +
+      * Copyright (c) 2001-2021 Scott C. Klement                                    +
+      * All rights reserved.                                                        +
+      *                                                                             +
+      * Redistribution and use in source and binary forms, with or without          +
+      * modification, are permitted provided that the following conditions          +
+      * are met:                                                                    +
+      * 1. Redistributions of source code must retain the above copyright           +
+      *    notice, this list of conditions and the following disclaimer.            +
+      * 2. Redistributions in binary form must reproduce the above copyright        +
+      *    notice, this list of conditions and the following disclaimer in the      +
+      *    documentation and/or other materials provided with the distribution.     +
+      *                                                                             +
+      * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+      * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+      * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+      * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+      * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+      * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+      * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+      * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+      * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+      * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+      * SUCH DAMAGE.                                                                +
+      *                                                                             +
+      */
+      /if defined(*CRTBNDRPG)
+     H DFTACTGRP(*NO) ACTGRP(*NEW)
+      /endif
+     H BNDDIR('FTPAPI')
+
+      *  This is a simple example of using the FTPAPI to download a file
+      *  from ftp.freebsd.org by URL
+      *
+ CPY  /COPY FTPAPI_H
+
+     D Msg             S             52A
+     D url             s            256A
+     D myfile          s            256A
+
+     c                   eval      url = 'ftp://ftp2.freebsd.org' +
+     c                                   '/pub/FreeBSD/tools/fips.exe'
+     c                   eval      myfile = '/tmp/fips.exe'
+
+     c                   if        ftp_url_get(url: myfile) < 0
+     c                   eval      msg = ftp_errorMsg(0)
+     c                   else
+     c                   eval      msg = 'Success!'
+     c                   endif
+
+     c                   dsply                   msg
+     c                   eval      *inlr = *on

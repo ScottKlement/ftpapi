@@ -1,0 +1,116 @@
+/*                                                                            +
+ * Copyright (c) 2001-2021 Scott C. Klement                                    +
+ * All rights reserved.                                                        +
+ *                                                                             +
+ * Redistribution and use in source and binary forms, with or without          +
+ * modification, are permitted provided that the following conditions          +
+ * are met:                                                                    +
+ * 1. Redistributions of source code must retain the above copyright           +
+ *    notice, this list of conditions and the following disclaimer.            +
+ * 2. Redistributions in binary form must reproduce the above copyright        +
+ *    notice, this list of conditions and the following disclaimer in the      +
+ *    documentation and/or other materials provided with the distribution.     +
+ *                                                                             +
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND      +
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+ * SUCH DAMAGE.                                                                +
+ *                                                                             +
+*/                                                                            +
+
+
+/*  This compiles the FTP API service program.   To use this, just  */
+/*  type:                                                           */
+/*         CALL INSTALL (MYLIB)                                     */
+/*                                                                  */
+/*         where MYLIB is the name of the library containing        */
+/*         the QRPGLESRC file.                                      */
+/*                                                                  */
+PGM   PARM(&SRCLIB)
+             DCL VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL VAR(&CURLIB) TYPE(*CHAR) LEN(10)
+             DCL VAR(&MBRTXT) TYPE(*CHAR) LEN(50)
+             DCL VAR(&CHARVER) TYPE(*CHAR) LEN(9)
+             DCL VAR(&VERSION) TYPE(*DEC) LEN(6)
+             DCL VAR(&TGTRLS) TYPE(*CHAR) LEN(8) VALUE('*CURRENT')
+
+             RTVOBJD OBJ(QSYS/QCMD) OBJTYPE(*PGM) SYSLVL(&CHARVER)
+             CHGVAR     VAR(&CHARVER) VALUE(%SST(&CHARVER 2 2) *CAT +
+                          %SST(&CHARVER 5 2) *CAT %SST(&CHARVER 8 2))
+             CHGVAR     VAR(&VERSION) VALUE(&CHARVER)
+
+             IF         COND(&VERSION *LT 040400) THEN(DO)
+                  SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) +
+                          MSGDTA('FTPAPI requires V4R4 or +
+                          laterÜ') MSGTYPE(*ESCAPE)
+                  RETURN
+             ENDDO
+
+             RTVJOBA    CURLIB(&CURLIB)
+             CHGCURLIB  CURLIB(&SRCLIB)
+
+             DLTMOD     MODULE(FTPAPIR4)
+             MONMSG     MSGID(CPF2105)
+
+             CRTRPGMOD  MODULE(FTPAPIR4) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             RTVMBRD    FILE(&SRCLIB/QRPGLESRC) MBR(FTPAPIR4 *SAME) +
+                          TEXT(&MBRTXT)
+
+             CRTSRVPGM  SRVPGM(&SRCLIB/FTPAPIR4) MODULE(*SRVPGM) +
+                          EXPORT(*SRCFILE) +
+                          SRCFILE(&SRCLIB/QSRVSRC) +
+                          SRCMBR(FTPAPI_X) TEXT(&MBRTXT) +
+                          BNDDIR(*LIBL/QC2LE) ACTGRP(*CALLER) +
+                          TGTRLS(&TGTRLS)
+
+             DLTMOD     MODULE(FTPAPIR4)
+             MONMSG     MSGID(CPF2105)
+
+             DLTBNDDIR  BNDDIR(FTPAPI)
+             MONMSG     MSGID(CPF0000)
+
+             CRTBNDDIR  BNDDIR(FTPAPI) TEXT('FTP API binding +
+                          directory')
+             ADDBNDDIRE BNDDIR(FTPAPI) OBJ((&SRCLIB/FTPAPIR4 +
+                          *SRVPGM)) POSITION(*FIRST)
+
+             CRTBNDRPG  PGM(TESTAPP) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TESTGET) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TESTMGET) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TESTMIRIN) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TESTMIROUT) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TESTPUT) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TESTURL) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TESTXPROC) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TEST2SESS) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             IF (&CURLIB *NE '*NONE') THEN(DO)
+                  CHGCURLIB CURLIB(&CURLIB)
+             ENDDO
+ENDPGM

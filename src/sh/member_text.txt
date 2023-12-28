@@ -1,0 +1,32 @@
+QCLSRC    INSTALL    Tool to build the service programs
+QCLSRC    LICENSE    License info
+QCLSRC    PACKAGE    Tool to create savf / zip
+QRPGLESRC LICENSE    License info
+QRPGLESRC CHANGELOG  Changes Made to FTPAPI   
+QRPGLESRC VERSION    FTPAPI version information
+QRPGLESRC EX1PUT     Example 1 - FTP_put
+QRPGLESRC EX2APPEND  Example 2 - FTP_append
+QRPGLESRC EX3GET     Example 3 - FTP_get
+QRPGLESRC EX4MGET    Example 4 - MGET equiv
+QRPGLESRC EX5XPROC   Example 5 - FTP_xProc
+QRPGLESRC EX6TREEFRM Example 6 - copy tree from server
+QRPGLESRC EX7TREETO  Example 7 - copy tree to server
+QRPGLESRC FTPAPI_H   COPY file for FTP API service program
+QRPGLESRC FTPAPIR4   Internet File Transfer API Service Program
+QRPGLESRC IFSIO_H    Integrated File System API Header File
+QRPGLESRC README     ***** READ THIS FIRST *****
+QRPGLESRC RECIO_H    Record-Type I/O w/C runtime functions
+QRPGLESRC SOCKET_H   Header File for doing communications with sockets
+QRPGLESRC TESTAPP    EXAMPLE: Appending to end of file on server
+QRPGLESRC TESTGET    EXAMPLE: Getting a file from a server
+QRPGLESRC TESTMGET   EXAMPLE: Getting a group of files from a server
+QRPGLESRC TESTMIRIN  EXAMPLE: Mirroring from FTP server to local
+QRPGLESRC TESTMIROUT EXAMPLE: Mirroring from local to FTP server
+QRPGLESRC TESTPUT    EXAMPLE: Sending a file to a server
+QRPGLESRC TESTURL    EXAMPLE: Retrieve via FTP using URL
+QRPGLESRC TESTXPROC  EXAMPLE: Using Exit proc show download progress
+QRPGLESRC TEST2SESS  EXAMPLE: Working with 2 FTP sessions
+QSRVSRC   FTPAPI_X   Binding Language source for FTPAPI
+QSRVSRC   LICENSE    License info
+QSH       MKZIP      (Scott Only) Build Zip for distribution
+QSH       LICENSE    License info
