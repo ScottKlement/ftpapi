@@ -2,11 +2,11 @@
 
       *
       * This is a sample of copying an entire directory tree from an
-      * FTP server to the IFS on your AS/400.
+      * FTP server to the IFS on your IBM i
       *
 
       *-                                                                            +
-      * Copyright (c) 2002-2021 Scott C. Klement                                    +
+      * Copyright (c) 2002-2024 Scott C. Klement                                    +
       * All rights reserved.                                                        +
       *                                                                             +
       * Redistribution and use in source and binary forms, with or without          +

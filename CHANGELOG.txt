@@ -1,3 +1,11 @@
+Changes from 2.6 -> 2.5:
+  Moved source code to IFS, Created Makefile, Added to GitHub
+  Converted README to markdown
+  Moved network routines to new module FTPTCP. Requires V7R1
+  Changed timeout default to 180 seconds (previously was infinite)
+  Made passive mode the default
+  Added support for enhanced (EPSV, EPRT) data channel commands
+
 Changes from 2.5 -> 2.4:
   Only replace .SAVF with .FILE if path is pointing to a library,
     since people are using .SAVF for IFS extensions these days.

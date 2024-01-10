@@ -7,7 +7,7 @@ SHELL = /usr/bin/qsh
 .SHELLFLAGS = -ec
 
 VERSION        := 2.6
-COPYRIGHT      := Version $(VERSION). Copyright 2001-2023 Scott C. Klement.
+COPYRIGHT      := Version $(VERSION). Copyright 2001-2024 Scott C. Klement.
 LIBRARY				 ?= LIBFTPX
 PKGLIB				 ?= LIBFTPXPKG
 TGTRLS         ?= v7r1m0
@@ -64,7 +64,7 @@ $(shell test -d $(CURDIR)/tmp || mkdir $(CURDIR)/tmp; rm $(CURDIR)/tmp/*.txt >/d
 #
 
 ifeq ($(DEBUG), 1)
-	DEBUG_OPTS     := dbgview(*all)
+	DEBUG_OPTS     := dbgview(*list)
 	SQL_DEBUG_OPTS := dbgview(*source)
 	CPP_OPTS       := $(CPP_OPTS) output(*print)
 else
@@ -94,10 +94,9 @@ SRCF_OBJS := $(addprefix $(ILIBRARY)/, $(SRCF_OBJS))
 TARGETS := $(FTP_OBJS)
 SRVPGMS := $(addprefix $(ILIBRARY)/, FTPAPIR4.srvpgm)
 
-NTLM_OBJS := MD4R4.module ENCRYPTR4.module NTLMR4.module
-
+FTPTCP.module_deps := src/rpg/SOCKET_H.rpgleinc src/rpg/GSKSSL_H.rpgleinc
 FTPAPIR4.module_deps := src/rpg/VERSION.rpgleinc
-FTPAPIR4.srvpgm_deps := $(addprefix $(ILIBRARY)/, FTPAPIR4.module)
+FTPAPIR4.srvpgm_deps := $(addprefix $(ILIBRARY)/, FTPAPIR4.module FTPTCP.module)
 
 .PHONY: all clean release
 
@@ -161,7 +160,7 @@ $(ILIBRARY)/QRPGLESRC.file: src/rpg/VERSION.rpgleinc | $(ILIBRARY)
 	done
 	for MBR in EX1PUT EX2APPEND EX3GET EX4MGET EX5XPROC EX6TREEFRM EX7TREETO \
 						 TESTAPP TESTGET TESTMGET TESTMIRIN TESTMIROUT TESTPUT TESTURL TESTXPROC TEST2SESS \
-						 FTPAPIR4; do
+						 FTPAPIR4 FTPTCP; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(rpgle)"; \
 	  cat "src/rpg/$${MBR}.rpgle" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done

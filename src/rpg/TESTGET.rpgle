@@ -1,5 +1,5 @@
       *-                                                                            +
-      * Copyright (c) 2001-2021 Scott C. Klement                                    +
+      * Copyright (c) 2001-2024 Scott C. Klement                                    +
       * All rights reserved.                                                        +
       *                                                                             +
       * Redistribution and use in source and binary forms, with or without          +
@@ -25,29 +25,6 @@
       *                                                                             +
       */
 
-      * This code contains contributions from Thomas Raddatz:
-      *    -- Added STRPRPRC statements to allow easier object creation.
-
-      *   >>PRE-COMPILER<<
-      *
-      *     >>CRTCMD<<  CRTRPGMOD    MODULE(&LI/&OB) +
-      *                              SRCFILE(&SL/&SF) +
-      *                              SRCMBR(&SM);
-      *
-      *     >>COMPILE<<
-      *       >>PARM<< TRUNCNBR(*NO);
-      *       >>PARM<< DBGVIEW(*LIST);
-      *     >>END-COMPILE<<
-      *
-      *     >>EXECUTE<<
-      *
-      *     >>CMD<<     CRTPGM       PGM(&LI/&OB) +
-      *                              MODULE(*PGM) +
-      *                              BNDSRVPGM(&LI/FTPAPIR4) +
-      *                              ACTGRP(*NEW);
-      *
-      *   >>END-PRE-COMPILER<<
-      *
       /if defined(*CRTBNDRPG)
      H DFTACTGRP(*NO) ACTGRP(*NEW)
       /endif
@@ -84,7 +61,7 @@
 
       * Change to the FreeBSD tools directory on
       *  this FTP server.  Deal with any errors.
- B01 c                   if        ftp_chdir(ftp: 'pub/FreeBSD/tools') < 0
+ B01 c                   if        ftp_chdir(ftp: 'pub/FreeBSD') < 0
      c                   eval      Msg = ftp_errorMsg(ftp)
      c                   dsply                   Msg
      c                   callp     ftp_quit(ftp)
@@ -93,10 +70,12 @@
  E01 c                   endif
 
 
-      * Get the FIPS utility (runs under DOS)
-      *   save it to the root directory, locally.
+      * Get the README.TXT file and 
+      *   save it to the /tmp directory, locally.
      c                   callp     ftp_binaryMode(ftp: *on)
- B01 c                   if        ftp_get(ftp: 'fips.exe': '/fips.exe') < 0
+ B01 c                   if        ftp_get( ftp
+     c                                    : 'README.TXT'
+     c                                    : '/tmp/README.TXT') < 0
      c                   eval      Msg = ftp_errorMsg(ftp)
      c                   dsply                   Msg
      c                   callp     ftp_quit(ftp)

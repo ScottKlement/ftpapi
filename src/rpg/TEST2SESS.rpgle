@@ -1,5 +1,5 @@
       *-                                                                            +
-      * Copyright (c) 2005-2021 Scott C. Klement                                    +
+      * Copyright (c) 2005-2024 Scott C. Klement                                    +
       * All rights reserved.                                                        +
       *                                                                             +
       * Redistribution and use in source and binary forms, with or without          +
@@ -149,8 +149,8 @@
       ****************************************************************
      c                   callp     ftp_quit(ftp1)
      c                   callp     ftp_quit(ftp2)
-     c                   callp     closef(log1)
-     c                   callp     closef(log2)
+     c                   callp     close(log1)
+     c                   callp     close(log2)
 
  B01 c                   if        gotfiles > 0
      c                   callp     CompMsg('Success!')

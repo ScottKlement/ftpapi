@@ -1,5 +1,5 @@
       *-                                                                            +
-      * Copyright (c) 2001-2021 Scott C. Klement                                    +
+      * Copyright (c) 2001-2024 Scott C. Klement                                    +
       * All rights reserved.                                                        +
       *                                                                             +
       * Redistribution and use in source and binary forms, with or without          +
@@ -25,33 +25,8 @@
       *                                                                             +
       */                                                                            +
 
-      * This code contains contributions from Thomas Raddatz:
-      *    -- Added STRPRPRC statements to allow easier object creation.
-
-      *   >>PRE-COMPILER<<
-      *
-      *     >>CRTCMD<<  CRTRPGMOD    MODULE(&LI/&OB) +
-      *                              SRCFILE(&SL/&SF) +
-      *                              SRCMBR(&SM);
-      *
-      *     >>COMPILE<<
-      *       >>PARM<< TRUNCNBR(*NO);
-      *       >>PARM<< DBGVIEW(*LIST);
-      *     >>END-COMPILE<<
-      *
-      *     >>EXECUTE<<
-      *
-      *     >>CMD<<     CRTPGM       PGM(&LI/&OB) +
-      *                              MODULE(*PGM) +
-      *                              BNDSRVPGM(&LI/FTPAPIR4) +
-      *                              ACTGRP(*NEW);
-      *
-      *   >>END-PRE-COMPILER<<
-      *
-
-
       * This is a simple example of appending ("adding") a file from this
-      *  AS/400 onto the end of a file on a remote FTP server.
+      *  IBM i onto the end of a file on a remote FTP server.
       *
       * Note that unlike the GET examples, I do not know of a public server
       * where I can APPEND a file as an example.  So, you'll need to fill
@@ -72,9 +47,10 @@
 
       * connect to FTP server.  If an error occurs,
       *  display an error message and exit.
-     c                   eval      sess = ftp_conn('ftpserv.mydomain.com':
-     c                                        'myname':
-     c                                        'mypassword')
+     c                   eval      sess = ftp_conn( 'ftpserv.mydomain.com'
+     c                                            : 'myname'
+     c                                            : 'mypassword' )
+
  B01 c                   if        sess < 0
      c                   eval      Msg = ftp_errorMsg(0)
      c                   dsply                   Msg
@@ -84,17 +60,20 @@
 
       * Place the TESTPUT source member onto the FTP server
      c                   callp     ftp_binaryMode(sess: *off)
- B01 c                   if        ftp_put(sess: 'testput.rpg4':
-     c                              '/qsys.lib/libftp.lib/qrpglesrc.file/' +
-     c                              'testput.mbr') < 0
+ B01 c                   if        ftp_put( sess
+     c                                    : 'testput.rpg4'
+     c                                    : '/qsys.lib/libftp.lib+
+     c                                       /qrpglesrc.file/testput.mbr') < 0
      c                   eval      Msg = ftp_errorMsg(sess)
      c                   dsply                   Msg
  E01 c                   endif
 
       * Append the TESTAPP member onto the end of the TESTPUT member
- B01 c                   if        ftp_append(sess: 'testput.rpg4':
-     c                              '/qsys.lib/libftp.lib/qrpglesrc.file/' +
-     c                              'testapp.mbr') < 0
+ B01 c                   if        ftp_append( sess
+     c                                       : 'testput.rpg4'
+     c                                       : '/qsys.lib/libftp.lib+
+     c                                          /qrpglesrc.file+
+     c                                          /testapp.mbr') < 0
      c                   eval      Msg = ftp_errorMsg(sess)
      c                   dsply                   Msg
  E01 c                   endif

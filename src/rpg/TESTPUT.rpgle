@@ -1,5 +1,5 @@
       *-                                                                            +
-      * Copyright (c) 2001-2021 Scott C. Klement                                    +
+      * Copyright (c) 2001-2024 Scott C. Klement                                    +
       * All rights reserved.                                                        +
       *                                                                             +
       * Redistribution and use in source and binary forms, with or without          +
@@ -25,33 +25,9 @@
       *                                                                             +
       */                                                                            +
 
-      * This code contains contributions from Thomas Raddatz:
-      *    -- Added STRPRPRC statements to allow easier object creation.
-
-      *   >>PRE-COMPILER<<
-      *
-      *     >>CRTCMD<<  CRTRPGMOD    MODULE(&LI/&OB) +
-      *                              SRCFILE(&SL/&SF) +
-      *                              SRCMBR(&SM);
-      *
-      *     >>COMPILE<<
-      *       >>PARM<< TRUNCNBR(*NO);
-      *       >>PARM<< DBGVIEW(*LIST);
-      *     >>END-COMPILE<<
-      *
-      *     >>EXECUTE<<
-      *
-      *     >>CMD<<     CRTPGM       PGM(&LI/&OB) +
-      *                              MODULE(*PGM) +
-      *                              BNDSRVPGM(&LI/FTPAPIR4) +
-      *                              ACTGRP(*NEW);
-      *
-      *   >>END-PRE-COMPILER<<
-      *
-
 
       * This is a simple example of sending ("putting") a file from this
-      *  AS/400 to a remote FTP server.
+      *  IBM i system to a remote FTP server.
       *
       * Note that unlike the GET examples, I do not know of a public server
       * where I can PUT a file as an example.  So you'll need to fill in the
@@ -71,20 +47,22 @@
 
       * connect to FTP server.  If an error occurs,
       *  display an error message and exit.
-     c                   eval      sess = ftp_conn('ftpserv.mydomain.com':
-     c                                        'myname':
-     c                                        'mypassword')
- B01 c                   if        sess < 0
+     c                   eval      sess = ftp_conn( 'ftpserv.mydomain.com'
+     c                                            : 'myname'
+     c                                            : 'mypassword')
+   1 c                   if        sess < 0
      c                   eval      Msg = ftp_errorMsg(0)
      c                   dsply                   Msg
      c                   eval      *inlr = *on
      c                   return
  E01 c                   endif
 
-      * put the FIPS utility (downloaded in TESTGET program) on
+      * put the README.TXT (downloaded in TESTGET program) on
       *  the FTP server.
      c                   callp     ftp_binaryMode(sess: *on)
- B01 c                   if        ftp_put(sess: 'fips.exe': '/fips.exe')<0
+ B01 c                   if        ftp_put( sess
+     c                                    : 'README.TXT'
+     c                                    : '/tmp/README.TXT')<0
      c                   eval      Msg = ftp_errorMsg(sess)
      c                   dsply                   Msg
  E01 c                   endif
