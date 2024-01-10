@@ -137,6 +137,9 @@ dcl-pr ftptcp_upgrade int(10);
   keyring_label  varchar(128) const options(*omit);
 end-pr;
 
+dcl-c FTPTCP_CLIENT_SESSION 507;
+dcl-c FTPTCP_SERVER_SESSION 508;
+
 
 /// =======================================================================
 //   ftptcp_downgrade 

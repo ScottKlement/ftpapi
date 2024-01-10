@@ -1,7 +1,7 @@
       /copy VERSION
 
       *-                                                                            +
-      * Copyright (c) 2001-2024 Scott C. Klement                                    +
+      * Copyright (c) 2001-2023 Scott C. Klement                                    +
       * All rights reserved.                                                        +
       *                                                                             +
       * Redistribution and use in source and binary forms, with or without          +
@@ -415,6 +415,12 @@
      D  wkStsExtra                     *   inz(*NULL)
      D  wkRestPt                     10u 0 inz
      D  wkEnhSupp                     1N   inz(*ON)
+     D  wkTLSMode                    10i 0 inz(FTPS_NONE)
+     D  wkTLSCtrl                    10i 0 inz(FTPS_CTRL_NONE)
+     D  wkAppId                     128a   varying inz('')
+     D  wkKeyPath                   256a   varying inz('')
+     D  wkKeyPass                   128A   varying inz('')
+     D  wkKeyLabel                  128A   varying inz('')
 
      D wkLastSocketUsed...
      D                 S             10I 0 INZ(INT_NULL)
@@ -3555,10 +3561,12 @@
      D wwSock          S             10I 0
      D wwSession       s             10I 0
      D wwBytes         s             16p 0
+     D wwTlsSsnType    s             10i 0
 
       * get the data connection  
      c                   if        wkPassive = *On
      c                   eval      wwSock = peSocket
+     c                   eval      wwTlsSsnType = FTPTCP_CLIENT_SESSION
      c                   else
      c                   eval      wwSock = ftptcp_accept( peSocket
      c                                                   : *omit
@@ -3567,7 +3575,20 @@
      c                   if        wwSock < 0
      c                   return    -1
      c                   endif
+     c                   eval      wwTlsSsnType = FTPTCP_SERVER_SESSION
      c                   endif
+
+      * if TLS is enabled the data conn should also be TLS    
+     c                   if        ftptcp_upgrade( wwSock
+     c                                           : wwTlsSsnType
+     c                                           : wkAppId
+     c                                           : wkKeyPath
+     c                                           : wkKeyPass
+     c                                           : wkKeyLabel) = -1
+     c                   return    -1
+     c                   endif
+ 
+
 
      c                   eval      wwBytes   = wkRestPt
      c                   eval      wkRestPt  = 0
@@ -3634,10 +3655,12 @@
      D wwNeeded        S              5U 0
      D wwBytes         S             16P 0
      D wwSession       S             10I 0
+     D wwTlsSsnType    s             10i 0
 
       * get data connection:
      c                   if        wkPassive = *On
      c                   eval      wwSock = peSocket
+     c                   eval      wwTlsSsnType = FTPTCP_CLIENT_SESSION
      c                   else
      c                   eval      wwSock = ftptcp_accept( peSocket
      c                                                   : *omit
@@ -3646,6 +3669,17 @@
      c                   if        wwSock < 0
      c                   return    -1
      c                   endif
+     c                   eval      wwTlsSsnType = FTPTCP_SERVER_SESSION
+     c                   endif
+
+      * if TLS is enabled the data conn should also be TLS    
+     c                   if        ftptcp_upgrade( wwSock
+     c                                           : wwTlsSsnType
+     c                                           : wkAppId
+     c                                           : wkKeyPath
+     c                                           : wkKeyPass
+     c                                           : wkKeyLabel) = -1
+     c                   return    -1
      c                   endif
 
      c                   eval      wwSession = wkSocket
@@ -3727,10 +3761,12 @@
      D wwCrLf          S              2A
      D wwSession       s             10I 0
      D wwBytes         s             16p 0
+     D wwTlsSsnType    s             10I 0
 
       * get data connection:
      c                   if        wkPassive = *On
      c                   eval      wwSock = peSocket
+     c                   eval      wwTlsSsnType = FTPTCP_CLIENT_SESSION
      c                   else
      c                   eval      wwSock = ftptcp_accept( peSocket
      c                                                   : *omit
@@ -3739,6 +3775,17 @@
      c                   if        wwSock < 0
      c                   return    -1
      c                   endif
+     c                   eval      wwTlsSsnType = FTPTCP_SERVER_SESSION
+     c                   endif
+
+      * if TLS is enabled the data conn should also be TLS    
+     c                   if        ftptcp_upgrade( wwSock
+     c                                           : wwTlsSsnType
+     c                                           : wkAppId
+     c                                           : wkKeyPath
+     c                                           : wkKeyPass
+     c                                           : wkKeyLabel) = -1
+     c                   return    -1
      c                   endif
 
      c                   eval      wwSession = wkSocket
@@ -3823,10 +3870,12 @@
      D wwSock          S             10I 0
      D wwBytes         S             16P 0
      D wwSession       s             10I 0
+     D wwTlsSsnType    s             10I 0
 
       * get data connection:
      c                   if        wkPassive = *On
      c                   eval      wwSock = peSocket
+     c                   eval      wwTlsSsnType = FTPTCP_CLIENT_SESSION
      c                   else
      c                   eval      wwSock = ftptcp_accept( peSocket
      c                                                   : *omit
@@ -3835,6 +3884,17 @@
      c                   if        wwSock < 0
      c                   return    -1
      c                   endif
+     c                   eval      wwTlsSsnType = FTPTCP_SERVER_SESSION
+     c                   endif
+
+      * if TLS is enabled the data conn should also be TLS    
+     c                   if        ftptcp_upgrade( wwSock
+     c                                           : wwTlsSsnType
+     c                                           : wkAppId
+     c                                           : wkKeyPath
+     c                                           : wkKeyPass
+     c                                           : wkKeyLabel) = -1
+     c                   return    -1
      c                   endif
 
      c                   eval      wwSession = wkSocket
@@ -6366,6 +6426,14 @@
      c                   eval      wwPort = pePort
      c                   endif
 
+      * If FTPS is enabled in implicit mode, 
+      * default port should be 990
+     c                   if        %parms >= 4 
+     c                             and peTlsMode = FTPS_IMPLICIT 
+     c                             and pePort = -1
+     c                   eval      wwPort = 990
+     c                   endif
+
       * Set a timeout value?
      c                   if        %parms>=3 and peTimeout<>-1
      c                   eval      wkTimeout = peTimeout
@@ -6388,6 +6456,33 @@
       *************************************************
      c                   callp     createSession(wwSessionIdx: wwSock)
      c                   callp     selectSession(wwSock)
+
+      *************************************************
+      * Save all the TLS parameters into the session
+      *************************************************
+     c                   if        %parms >= 4
+     c                   eval      wkTlsMode = peTlsMode
+     c                   endif
+
+     c                   if        %parms >= 5
+     c                   eval      wkTlsCtrl = peTlsCtrl
+     c                   endif
+
+     c                   if        %parms >= 6
+     c                   eval      wkAppId = peAppId
+     c                   endif
+
+     c                   if        %parms >= 7
+     c                   eval      wkKeyPath = peKeyPath
+     c                   endif
+
+     c                   if        %parms >= 8
+     c                   eval      wkKeyPass = peKeyPass
+     c                   endif
+
+     c                   if        %parms >= 9
+     c                   eval      wkKeyLabel = peKeyLabel
+     c                   endif
 
      c                   return    wwSock
      P                 E
@@ -6473,6 +6568,23 @@
      c                   eval      wwAcct = peAcct
      c                   endif
 
+
+      *************************************************
+      * If in implicit mode, start TLS now
+      *************************************************
+     c                   if        wkTlsMode = FTPS_IMPLICIT
+
+     c                   if        ftptcp_upgrade( peSocket
+     c                                           : FTPTCP_CLIENT_SESSION
+     c                                           : wkAppId
+     c                                           : wkKeyPath
+     c                                           : wkKeyPass
+     c                                           : wkKeyLabel) = -1
+     c                   return    -1
+     c                   endif
+     
+     c                   endif
+
       *************************************************
       * 220 myserver.mydomain.com FTP server ready
       *************************************************
@@ -6486,6 +6598,54 @@
      c                               ' didn''t give a starting response ' +
      c                               ' of 220 ')
      c                   return    -1
+     c                   endif
+
+      *************************************************
+      * Enable explcit TLS with the AUTH TLS command
+      *  
+      * NOTE: If AUTH TLS fails, we silently try to
+      *       fall back to the older 'AUTH SSL', but
+      *       this is not put in the log
+      *************************************************
+     c                   if        wkTlsMode = FTPS_TLS
+
+     c                   if        SendLine2(wwSock: 'AUTH TLS') < 0
+     c                   return    -1
+     c                   endif
+
+     c                   eval      wwSaveDbg = wkDebug
+     c                   eval      wkDebug = *off
+
+     c                   eval      wwReply = Reply(wwSock: wwMsg)
+     c                   if        wwReply < 0
+     c                   return    -1
+     c                   endif
+
+     c                   if        wwReply = 234
+     c                   callp     DiagLog(wwMsg)
+     c                   eval      wkDebug = wwSaveDbg
+     c                   else
+     c                   callp     SendLine2(wwSock: 'AUTH SSL')
+     c                   eval      wkDebug = wwSaveDbg
+     c                   eval      wwReply = Reply(wwSock: wwMsg)
+     c                   endif
+
+     c                   if        wwReply <> 234
+     c                   callp     setError( FTP_STRTLS
+     c                                     : 'Server rejected request to +
+     c                                        use TLS/SSL')
+     c                   return    -1
+     c                   endif
+     
+     c                   if        ftptcp_upgrade( wwSock
+     c                                           : FTPTCP_CLIENT_SESSION
+     c                                           : wkAppId
+     c                                           : wkKeyPath
+     c                                           : wkKeyPass
+     c                                           : wkKeyLabel) = -1
+     c                   return    -1
+     c                   endif
+
      c                   endif
 
       *************************************************
@@ -6576,6 +6736,28 @@
      c                   return    -1
      c                   endif
 
+     c                   endif
+
+      *************************************************
+      * clear command channel if needed
+      *  (I hate that this even exists -- it should 
+      *   only be needed when a server does not support
+      *   the EPSV command, and a NAT gateway doesn't
+      *   understand FTPS)
+      *************************************************
+     c                   if        wkTlsCtrl = FTPS_CTRL_CLEAR
+
+     c                   callp     SendLine2(wwSock: 'CCC')
+
+     c                   if        Reply(wwSock) = 200
+     c                   callp     ftptcp_downgrade(wwSock)
+     c                   else
+     c                   callp     SetError( FTP_ENDTLS
+     c                                     : 'Server is unwilling to clear +
+     c                                     the control channel' )
+     c                   return    -1
+     c                   endif
+     
      c                   endif
 
      c                   return    0
