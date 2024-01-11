@@ -57,10 +57,8 @@
      D FTPS_NONE       C                   0
      D FTPS_IMPLICIT   C                   100
      D FTPS_TLS        C                   200
-     D FTPS_CTRL_NONE  C                   300
-     D FTPS_CTRL_TLS   C                   400
-     D FTPS_CTRL_CLEAR...
-     D                 C                   500
+     D FTPS_PRIVATE    C                   300
+     D FTPS_CLEAR      C                   400
 
       **********************************************************************
       *  These constants correspond to error messages that can be returned
@@ -242,6 +240,8 @@
       * Server doesn't support dropping TLS/SSL on the
       * control channel
      D FTP_ENDTLS      C                   CONST(88)
+      * Error found setting TLS data protection mode
+     D FTP_TLSDTA      C                   CONST(89)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1200,13 +1200,16 @@
       *                               TLS is explicitly requested from the
       *                               server via AUTH SSL or AUTH TLS
       *  peTLSCtrl = (optional) One of the following constants
-      *                - FTPS_CTRL_NONE = The control channel does not use 
-      *                                   TLS (default for FTPS_NONE mode)
-      *                - FTPS_CTRL_TLS = The control channel is always TLS
-      *                                   encrypted (default when TLS is used)
-      *                - FTPS_CTRL_CLEAR = The control channel uses TLS for
-      *                                     login only, then drops to clear
-      *                                     text (needed by some firewalls)
+      *                - FTPS_PRIVATE = (default) The control channel where
+      *                                  FTP commands are transmitted is 
+      *                                  encrypted with TLS
+      *                - FTPS_CLEAR   = The control channel uses TLS for
+      *                                  login only, then drops encryption
+      *                                  (needed by some older firewalls)
+      *  peTLSData = (optional) One of the following constants
+      *                - FTPS_PRIVATE = (default) Data channels used for
+      *                                   file transfer are encrypted
+      *                - FTPS_CLEAR   = Data channels are not encrypted
       *  peAppId    = (optional) digital certificate manager application id
       *  peKeyPath  = (optional) Path to GSKit keystore file
       *  peKeyPass  = (optional) Password for GSKit keystore file
@@ -1228,6 +1231,7 @@
      D   peTimeout                   10I 0 value options(*nopass)
      D   peTLSMode                   10i 0 value options(*nopass)
      D   peTLSCtrl                   10i 0 value options(*nopass)
+     D   peTlsData                   10i 0 value options(*nopass)
      D   peAppId                    128a   varying const options(*nopass:*omit)
      D   peKeyPath                  256a   varying const options(*nopass:*omit)
      D   peKeyPass                  128A   varying const options(*nopass:*omit)

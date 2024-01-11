@@ -878,8 +878,9 @@ dcl-proc ftptcp_upgrade export;
     keyring_label  varchar(128) const options(*omit);
   end-pi;
 
-  dcl-s flags uns(10);
-  dcl-s rc    int(10);
+  dcl-s flags    uns(10);
+  dcl-s rc       int(10);
+  dcl-s blocking uns(10);
 
   if TlsEnv = *NULL 
     and GskEnvironmentSetup( handle
@@ -918,9 +919,11 @@ dcl-proc ftptcp_upgrade export;
     return -1;
   endif;
 
+  blocking = O_NONBLOCK;
+  blocking = %bitnot(blocking);
   flags = fcntl(ssn.fd: F_GETFL);
-  flags = %bitand(flags: %bitnot(O_NONBLOCK));
-  fcntl(ssn.fd: F_SETFL);
+  flags = %bitand(flags: blocking);
+  fcntl(ssn.fd: F_SETFL: flags);
 
   rc = gsk_attribute_set_numeric_value( ssn.TlsSoc
                                       : GSK_FD
@@ -947,7 +950,7 @@ dcl-proc ftptcp_upgrade export;
   //  socket
   // --------------------------------------------
 
-  rc = gsk_attribute_set_enum( TlsEnv
+  rc = gsk_attribute_set_enum( ssn.TlsSoc
                              : GSK_SESSION_TYPE
                              : role );
   if rc <> GSK_OK;
@@ -1008,11 +1011,16 @@ dcl-proc ftptcp_downgrade export;
     handle int(10) value;
   end-pi;
 
+  dcl-s flags    uns(10);
+
   selectSsn(handle);
 
   if ssn.TlsSoc <> *NULL;
     gsk_secure_soc_close( ssn.TlsSoc );
     ssn.TlsSoc = *NULL;
+    flags = fcntl(ssn.fd: F_GETFL);
+    flags = %bitor(flags: O_NONBLOCK);
+    fcntl(ssn.fd: F_SETFL: flags);
   endif;
 
   return 0;

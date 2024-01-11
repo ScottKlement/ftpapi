@@ -8,8 +8,8 @@ SHELL = /usr/bin/qsh
 
 VERSION        := 2.6
 COPYRIGHT      := Version $(VERSION). Copyright 2001-2024 Scott C. Klement.
-LIBRARY				 ?= LIBFTPX
-PKGLIB				 ?= LIBFTPXPKG
+LIBRARY				 ?= LIBFTP
+PKGLIB				 ?= LIBFTPPKG
 TGTRLS         ?= v7r1m0
 BUILD_EXAMPLES ?= 1
 DEBUG					 ?= 1
@@ -76,7 +76,7 @@ endif
 
 define EXAMPLES
 	TESTAPP.pgm TESTGET.pgm TESTMGET.pgm TESTMIRIN.pgm TESTMIROUT.pgm TESTPUT.pgm TESTURL.pgm
-	TESTXPROC.pgm TEST2SESS.pgm
+	TESTXPROC.pgm TEST2SESS.pgm TESTFTPS.pgm
   EX1PUT.pgm EX2APPEND.pgm EX3GET.pgm EX4MGET.pgm EX5XPROC.pgm EX6TREEFRM.pgm EX7TREETO.pgm	
 endef	
 EXAMPLES := $(addprefix $(ILIBRARY)/, $(EXAMPLES))
