@@ -5,6 +5,7 @@ Changes from 2.6 -> 2.5:
   Changed timeout default to 180 seconds (previously was infinite)
   Made passive mode the default
   Added support for enhanced (EPSV, EPRT) data channel commands
+  Added support for FTPS (TLS/SSL)
 
 Changes from 2.5 -> 2.4:
   Only replace .SAVF with .FILE if path is pointing to a library,
