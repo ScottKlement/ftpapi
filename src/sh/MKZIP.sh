@@ -13,19 +13,20 @@ OUTPREF=${HOME}/ftpapi
 
 copyemall() {
 
-   while read f; do
-      FILE=$(echo $f | cut -c 3-)
-      INFULL="${INPREF}/${FILE}"
-      OUTFULL="${OUTPREF}/${FILE}"
-      echo "infull = $INFULL"
-      echo "outfull = $OUTFULL"
-      if [ -d $INFULL ]; then
-          echo "mkdir $OUTFULL"
-          mkdir $OUTFULL || exit 1
-      else
-          system -v "CPYTOSTMF FROMMBR('$INFULL') TOSTMF('$OUTFULL') STMFOPT(*REPLACE) STMFCODPAG(819)" || exit
-      fi
-   done
+  while read f; do
+    FILE=$(echo $f | cut -c 3-)
+    INFULL="${INPREF}/${FILE}"
+    OUTFULL="${OUTPREF}/${FILE}"
+    echo "infull = $INFULL"
+    echo "outfull = $OUTFULL"
+    if [ -d $INFULL ]; then
+      echo "mkdir $OUTFULL"
+      mkdir $OUTFULL || exit 1
+    else
+      echo "system -v \"CPYTOSTMF FROMMBR('${INFULL}') TOSTMF('${OUTFULL}') STMFOPT(*REPLACE) STMFCODPAG(819)\""
+      system -v "CPYTOSTMF FROMMBR('${INFULL}') TOSTMF('${OUTFULL}') STMFOPT(*REPLACE) STMFCODPAG(819)" || exit
+    fi
+  done
 
 }
 

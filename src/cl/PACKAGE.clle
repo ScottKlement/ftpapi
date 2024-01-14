@@ -61,6 +61,8 @@ PGM
              MONMSG CPF2105
              DLTPGM     PGM(&INSTLIB/TESTAPP)
              MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/TESTFTPS)
+             MONMSG CPF2105
              DLTPGM     PGM(&INSTLIB/TESTGET)
              MONMSG CPF2105
              DLTPGM     PGM(&INSTLIB/TESTMGET)
@@ -118,7 +120,7 @@ PGM
                  ADDENVVAR  ENVVAR(QIBM_QSH_CMD_ESCAPE_MSG) VALUE(Y) +
                             REPLACE(*YES)
                  STRQSH CMD('/qsys.lib/libftp.lib/qsh.file+
-                            /mkzip.mbr')
+                            /mkzip.mbr LIBFTP /home/sklement/libftp')
                  DLTF FILE(&INSTLIB/WORK)
                  CHGVAR VAR(&CMD) VALUE('cd' *BCAT &WRKDIR2 *BCAT '&& +
                                    7z a -tzip -r ../ftpapi.zip *')

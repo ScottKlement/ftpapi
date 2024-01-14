@@ -1,4 +1,4 @@
-/*�                                                                            +
+/*                                                                            +
  * Copyright (c) 2001-2024 Scott C. Klement                                    +
  * All rights reserved.                                                        +
  *                                                                             +
@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
  * SUCH DAMAGE.                                                                +
  *                                                                             +
-*/                                                                            +
+ */                                                                            +
 
 
 /*  This compiles the FTP API service program.   To use this, just  */
@@ -62,10 +62,13 @@ PGM   PARM(&SRCLIB)
              CRTRPGMOD  MODULE(FTPAPIR4) SRCFILE(&SRCLIB/QRPGLESRC) +
                           DBGVIEW(*LIST) TGTRLS(&TGTRLS)
 
+             CRTRPGMOD  MODULE(FTPTCP) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
              RTVMBRD    FILE(&SRCLIB/QRPGLESRC) MBR(FTPAPIR4 *SAME) +
                           TEXT(&MBRTXT)
 
-             CRTSRVPGM  SRVPGM(&SRCLIB/FTPAPIR4) MODULE(*SRVPGM) +
+             CRTSRVPGM  SRVPGM(&SRCLIB/FTPAPIR4) MODULE(FTPAPIR4 FTPTCP) +
                           EXPORT(*SRCFILE) +
                           SRCFILE(&SRCLIB/QSRVSRC) +
                           SRCMBR(FTPAPI_X) TEXT(&MBRTXT) +
@@ -73,6 +76,9 @@ PGM   PARM(&SRCLIB)
                           TGTRLS(&TGTRLS)
 
              DLTMOD     MODULE(FTPAPIR4)
+             MONMSG     MSGID(CPF2105)
+
+             DLTMOD     MODULE(FTPTCP)
              MONMSG     MSGID(CPF2105)
 
              DLTBNDDIR  BNDDIR(FTPAPI)
@@ -87,6 +93,9 @@ PGM   PARM(&SRCLIB)
                           DBGVIEW(*LIST) TGTRLS(&TGTRLS)
 
              CRTBNDRPG  PGM(TESTGET) SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) TGTRLS(&TGTRLS)
+
+             CRTBNDRPG  PGM(TESTFTPS) SRCFILE(&SRCLIB/QRPGLESRC) +
                           DBGVIEW(*LIST) TGTRLS(&TGTRLS)
 
              CRTBNDRPG  PGM(TESTMGET) SRCFILE(&SRCLIB/QRPGLESRC) +

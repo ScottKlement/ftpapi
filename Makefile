@@ -154,12 +154,12 @@ $(ILIBRARY)/QRPGLESRC.file: src/rpg/VERSION.rpgleinc | $(ILIBRARY)
 	system -v 'crtsrcpf file($(LIBRARY)/$(basename $(@F))) rcdlen(112)'
 	system -v "chgobjown obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) newown($(OWNER)) curownaut(*revoke)"
 	system -v "grtobjaut obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) user(*public) aut(*use) replace(*yes)"
-	for MBR in RECIO_H IFSIO_H FTPAPI_H SOCKET_H VERSION; do
+	for MBR in ERRNO_H FTPAPI_H FTPTCP_H GSKSSL_H IFSIO_H RECIO_H SOCKET_H VERSION; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(rpgle)"; \
 	  cat "src/rpg/$${MBR}.rpgleinc" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done
 	for MBR in EX1PUT EX2APPEND EX3GET EX4MGET EX5XPROC EX6TREEFRM EX7TREETO \
-						 TESTAPP TESTGET TESTMGET TESTMIRIN TESTMIROUT TESTPUT TESTURL TESTXPROC TEST2SESS \
+						 TESTAPP TESTFTPS TESTGET TESTMGET TESTMIRIN TESTMIROUT TESTPUT TESTURL TESTXPROC TEST2SESS \
 						 FTPAPIR4 FTPTCP; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(rpgle)"; \
 	  cat "src/rpg/$${MBR}.rpgle" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
@@ -200,17 +200,17 @@ $(ILIBRARY)/QSRVSRC.file: | $(ILIBRARY)
 	system -v "grtobjaut obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) user(*public) aut(*use) replace(*yes)"
 	for MBR in FTPAPI_X; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(bnd)"; \
-	  cat "src/srvsrc/$${MBR}.bnd" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
+	  cat "src/srv/$${MBR}.bnd" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done
 	for MBR in LICENSE; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(txt)"; \
-	  cat "src/srvsrc/$${MBR}.txt" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
+	  cat "src/srv/$${MBR}.txt" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done) $(OUTPUT)
 
 $(ILIBRARY)/QSH.file: | $(ILIBRARY)
 	@$(info Creating $(@))touch -C 1208 $(LOGFILE)
 	(rm -f '$(@)'
-	system -v 'crtsrcpf file($(LIBRARY)/$(basename $(@F))) rcdlen(92)'
+	system -v 'crtsrcpf file($(LIBRARY)/$(basename $(@F))) rcdlen(240)'
 	system -v "chgobjown obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) newown($(OWNER)) curownaut(*revoke)"
 	system -v "grtobjaut obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) user(*public) aut(*use) replace(*yes)"
 	for MBR in MKZIP; do

@@ -13,12 +13,15 @@ QRPGLESRC EX6TREEFRM Example 6 - copy tree from server
 QRPGLESRC EX7TREETO  Example 7 - copy tree to server
 QRPGLESRC FTPAPI_H   COPY file for FTP API service program
 QRPGLESRC FTPAPIR4   Internet File Transfer API Service Program
+QRPGLESRC FTPTCP_H   Copybook for TCP networking routines
+QRPGLESRC FTPTCP     TCP networking routines for FTPAPI
 QRPGLESRC IFSIO_H    Integrated File System API Header File
 QRPGLESRC README     ***** READ THIS FIRST *****
 QRPGLESRC RECIO_H    Record-Type I/O w/C runtime functions
 QRPGLESRC SOCKET_H   Header File for doing communications with sockets
 QRPGLESRC TESTAPP    EXAMPLE: Appending to end of file on server
 QRPGLESRC TESTGET    EXAMPLE: Getting a file from a server
+QRPGLESRC TESTFTPS   EXAMPLE: Using FTPS (FTP over TLS/SSL)
 QRPGLESRC TESTMGET   EXAMPLE: Getting a group of files from a server
 QRPGLESRC TESTMIRIN  EXAMPLE: Mirroring from FTP server to local
 QRPGLESRC TESTMIROUT EXAMPLE: Mirroring from local to FTP server
