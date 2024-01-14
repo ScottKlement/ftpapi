@@ -53,7 +53,7 @@
                        : -1
                        : 15
                        : FTPS_TLS
-                       : FTPS_CLEAR
+                       : FTPS_PRIVATE
                        : FTPS_PRIVATE );
         if sess = -1;
           msg = ftp_errorMsg(0);
