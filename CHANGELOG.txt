@@ -1,3 +1,7 @@
+Changes from 2.7 -> 2.6
+  Added support for using an HTTP proxy
+  Added new function FTP_setProxy to configure the proxy
+
 Changes from 2.6 -> 2.5:
   Moved source code to IFS, Created Makefile, Added to GitHub
   Converted README to markdown

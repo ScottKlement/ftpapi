@@ -483,6 +483,12 @@
      D   wkEBCDICF_eo                10I 0 INZ(1)
      D   wkEBCDICF_r                  8A   INZ(*allx'00')
 
+     D wkProxDS        DS              
+     D   wkProxHost                 256A   varying inz('')
+     D   wkProxPort                  10i 0 inz(0)
+     D   wkProxUser                2048A   varying inz('')
+     D   wkProxPass                2048A   varying inz('')
+
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       * FTP_Conn:  Connect and log-in to an FTP server.
       *
@@ -3985,7 +3991,11 @@
       * connect to remote site
      c                   if        ftptcp_connect( wwSocket
      c                                           : %trim(peHost)
-     c                                           : pePort ) = -1
+     c                                           : pePort
+     c                                           : wkProxHost
+     c                                           : wkProxPort
+     c                                           : wkProxUser
+     c                                           : wkProxPass) = -1
      c                   return    -1
      c                   endif
 
@@ -7074,5 +7084,53 @@
         return 0;
         
       /end-free
+     P                 E                         
+
+   
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      *  FTP_setProxy: Sets an HTTP proxy server to use for any 
+      *                subsequent FTP connections.
+      *
+      *   peProxy = (input) hostname of proxy server
+      *   pePort  = (input) port number (if not given, 80 is used)
+      *   peUser  = (input) user to login with (if user/pass are not
+      *                     given, the assumption is the proxy won't
+      *                     require them.)
+      *   pePass  = (input) password to login with.
+      *
+      *  Returns 0 for success.
+      *
+      *      NOTE: At this time, the parameters are saved. They will
+      *            be used by FTP_open or FTP_conn, so no errors will
+      *            be produced until then.
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     P FTP_setProxy    B                   export
+     D                 PI            10i 0
+     D    peProxy                   256A   varying const
+     D    pePort                     10i 0 const options(*nopass:*omit)
+     D    peUser                   2048A   varying const options(*nopass:*omit)
+     D    pePass                   2048A   varying const options(*nopass:*omit)
+
+     P*ame+++++++++++..T...................Keywords+++++++++++++++++++++++++
+     D*ame+++++++++++ETDsFrom+++To/L+++IDc.Keywords+++++++++++++++++++++++++
+     C*0N01Factor1+++++++Opcode&ExtFactor2+++++++Result++++++++Len++D+HiLoEq
+     c                   eval      wkProxHost = peProxy
+     c                   eval      wkProxPort = 0
+     c                   eval      wkProxUser = ''
+     c                   eval      wkProxPass = ''
+
+     c                   if        %parms >= 4 and %addr(pePort) <> *null
+     c                   eval      wkProxPort = pePort
+     c                   endif
+
+     c                   if        %parms >= 5 and %addr(peUser) <> *null
+     c                   eval      wkProxUser = peUser
+     c                   endif
+
+     c                   if        %parms >= 6 and %addr(pePass) <> *null
+     c                   eval      wkProxPass = pePass
+     c                   endif
+        
+     c                   return    0
      P                 E                         
 
