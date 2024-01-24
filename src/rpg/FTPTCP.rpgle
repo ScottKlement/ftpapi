@@ -36,6 +36,7 @@ ctl-opt nomain option(*srcstmt:*nodebugio);
 /copy GSKSSL_H
 /copy ERRNO_H
 /copy FTPAPI_H
+/copy ICONV_H
 
 dcl-pr memchr pointer extproc(*cwiden:'memchr');
   buf pointer value;
@@ -51,6 +52,7 @@ end-pr;
 
 
 dcl-c BUFFER_SIZE 131072;
+dcl-c CRLF        x'0d25';
 
 dcl-pr setError;
   errnum int(10) value;
@@ -58,24 +60,50 @@ dcl-pr setError;
 end-pr;
 
 dcl-ds vanillaSsn qualified;
-  TlsSoc  pointer inz(*null);
-  fd      int(10) inz(-1);
-  ipaddr  uns(10) inz(INADDR_NONE);
-  port    int(10) inz(0);
-  timeout packed(9: 3);
-  host    varchar(256);
-  bufSize uns(10) inz(0);
-  bufLen  uns(10) inz(0);
-  bufCurr pointer inz(*null);
-  bufPtr  pointer inz(*null); 
+  TlsSoc    pointer       inz(*null);
+  fd        int(10)       inz(-1);
+  ipaddr    uns(10)       inz(INADDR_NONE);
+  port      int(10)       inz(0);
+  timeout   packed(9: 3);
+  host      varchar(256);
+  bufSize   uns(10)       inz(0);
+  bufLen    uns(10)       inz(0);
+  bufCurr   pointer       inz(*null);
+  bufPtr    pointer       inz(*null); 
+  proxyHost varchar(256)  inz('');
+  proxyPort int(10)       inz(80);
+  proxyPass varchar(2048) inz('');
+  proxyUser varchar(2048) inz('');
 end-ds;
 
 dcl-s ssnptr pointer dim(1000);
 dcl-s p_ssn pointer;
 dcl-ds ssn likeds(vanillaSsn) based(p_ssn);
 dcl-s tlsEnv pointer inz(*null);
+dcl-s xlate_init ind inz(*off);
+
+dcl-ds jobToUtf likeds(iconv_t);
+dcl-ds utfToJob likeds(iconv_t);
 
 dcl-pr system_errno pointer extproc('__errno');
+end-pr;
+
+dcl-pr QMHSNDPM extpgm('QSYS/QMHSNDPM');
+  msgid      char(7)  const;
+  msgf       char(20) const;
+  msgdta     char(32767) const options(*varsize);
+  msgdtalen  int(10)  const;
+  msgtype    char(10) const;
+  callstkEnt char(10) const;
+  callStkCnt int(10)  const;
+  msgKey     char(4);
+  errorCode  char(32767) options(*varsize);
+end-pr;
+
+dcl-pr do_iconv extproc('DO_ICONV_REAL');
+  ictbl likeds(iconv_t);
+  inp   varchar(32766) options(*varsize) const;
+  outp  varchar(32766);
 end-pr;
 
 /// =======================================================================
@@ -133,21 +161,21 @@ dcl-proc setGskError;
   dcl-s  msg  varchar(254);
 
   select;
-  when gskrc = GSK_OK;
-    return 0;
-  when gskrc = GSK_ERROR_IO;
-    p_err = system_errno();
-    msg = action
+    when gskrc = GSK_OK;
+      return 0;
+    when gskrc = GSK_ERROR_IO;
+      p_err = system_errno();
+      msg = action
         + ': GSK_ERROR_IO: '
         + %str(strerror(err));
-    setError(code : msg);
-    return -1;
-  other;
-    msg = action
+      setError(code : msg);
+      return -1;
+    other;
+      msg = action
         + ': '
         + %str(gsk_strerror(gskrc));
-    setError(code : msg);
-    return -1;
+      setError(code : msg);
+      return -1;
   endsl;
 
 end-proc;
@@ -262,6 +290,10 @@ end-proc;
 //    @param = (input) handle to TCP socket
 //    @param = (input) host name or IP address to connect to
 //    @param = (input) port number to connect to
+//    @param = (input/optional) HTTP proxy to connect through
+//    @param = (input/optional) Port of HTTP proxy (default: 80)
+//    @param = (input/optional) userid for http proxy 
+//    @param = (input/optional) password for http proxy
 //
 //    @return 0 if successfully connected, -1 upon failure
 /// =======================================================================
@@ -269,9 +301,13 @@ end-proc;
 dcl-proc ftptcp_connect export;
 
   dcl-pi *n int(10);
-    handle int(10) value;
-    host   pointer value options(*string);
-    port   int(10) value;
+    handle    int(10)       value;
+    host      pointer       value options(*string);
+    port      int(10)       value;
+    proxyHost varchar(256)  const options(*nopass:*omit);
+    proxyPort int(10)       const options(*nopass:*omit);
+    proxyUser varchar(2048) const options(*nopass:*omit);
+    proxyPass varchar(2048) const options(*nopass:*omit);
   end-pi;
 
   dcl-ds addr        likeds(sockaddr_in);
@@ -283,10 +319,57 @@ dcl-proc ftptcp_connect export;
   dcl-s  errNum      int(10);
   dcl-s  flags       uns(10);
   dcl-s  rc          int(10);
+  dcl-s  pHost       varchar(256);
+  dcl-s  pPort       int(10) inz(0);
+  dcl-s  pUser       varchar(2048) inz('');
+  dcl-s  pPass       varchar(2048) inz('');
+  dcl-s  cHost       varchar(256);
+  dcl-s  cPort       int(10);
 
-  binAddr = inet_addr(host);
+  if %parms >= 4
+     and %addr(proxyHost) <> *null
+     and proxyHost <> ''
+     and proxyHost <> *blanks;
+    pHost = %trim(proxyHost);
+  endif;
+
+  if %parms >= 5
+     and %addr(proxyPort) <> *null
+     and proxyPort > 0;
+    pPort = proxyPort;
+  endif;
+
+  if %parms >= 6
+     and %addr(proxyUser) <> *null
+     and proxyUser <> ''
+     and proxyUser <> *blanks;
+    pUser = %trim(proxyUser);
+  endif;
+
+  if %parms >= 7
+     and %addr(proxyPass) <> *null
+     and proxyPass <> ''
+     and proxyPass <> *blanks;
+    pPass = %trim(proxyPass);
+  endif;
+
+  if pHost <> '';
+    cHost = pHost;
+  else;
+    cHost = %str(host);
+  endif;
+
+  if pPort > 0;
+    cPort = pPort;
+  elseif proxyHost <> '';
+    cPort = 80;
+  else;
+    cPort = port;
+  endif;
+
+  binAddr = inet_addr(cHost);
   if binAddr = INADDR_NONE;
-    p_hostent = gethostbyname(host);
+    p_hostent = gethostbyname(cHost);
     if p_hostent <> *NULL;
       binAddr = h_addr;
     endif;
@@ -299,7 +382,7 @@ dcl-proc ftptcp_connect export;
       
   addr = *ALLx'00';
   addr.sin_family = AF_INET;
-  addr.sin_port   = port;
+  addr.sin_port   = cPort;
   addr.sin_addr   = binAddr;
 
   selectSsn(handle);
@@ -309,17 +392,21 @@ dcl-proc ftptcp_connect export;
   fcntl(ssn.fd: F_SETFL: flags);
 
   if connect(ssn.fd: %addr(addr): %size(addr)) = -1;
-     p_err = system_errno();
-     if err <> EINPROGRESS;
-       setError(FTP_BADCNN: 'connect: '
+    p_err = system_errno();
+    if err <> EINPROGRESS;
+      setError(FTP_BADCNN: 'connect: '
                           + %str(strerror(err)));
-       return -1;
-     endif;
+      return -1;
+    endif;
   endif;
 
   ssn.port = port;
   ssn.host = %str(host);
   ssn.ipaddr = binAddr;
+  ssn.proxyHost = pHost;
+  ssn.proxyPort = pPort;
+  ssn.proxyUser = pUser;
+  ssn.proxyPass = pPass;
 
   pfd(1) = *allx'00';
   pfd(1).fd = ssn.fd;
@@ -328,18 +415,18 @@ dcl-proc ftptcp_connect export;
   rc = poll( pfd: 1: ssn.timeout * 1000);
 
   select;
-  when rc = 0;
-    rc = close(ssn.fd);
-    setError(FTP_CONNTO: 'connect: No connection made, +
-                          connection timed out.');
-    return -1;
-  when rc = -1;
-    p_err = system_errno();
-    errnum = err;
-    rc = close(ssn.fd);
-    setError(FTP_BADCNN: 'poll: '
+    when rc = 0;
+      rc = close(ssn.fd);
+      setError(FTP_CONNTO: 'connect: No connection made, +
+                            connection timed out.');
+      return -1;
+    when rc = -1;
+      p_err = system_errno();
+      errnum = err;
+      rc = close(ssn.fd);
+      setError(FTP_BADCNN: 'poll: '
                        + %str(strerror(err)));
-    return -1;
+      return -1;
   endsl;
   
   if %bitand( pfd(1).revents: POLLOUT) = 0;
@@ -355,6 +442,13 @@ dcl-proc ftptcp_connect export;
     setError(FTP_BADCNN: 'connect: '
                        + %str(strerror(connErr)));
     return -1;
+  endif;
+
+  if pHost <> '';
+    if proxy_tunnel(handle) = -1;
+      rc = close(ssn.fd);
+      return -1;
+    endif;
   endif;
 
   return 0;
@@ -680,7 +774,7 @@ dcl-proc GskEnvironmentSetup;
      and keyring.path  = ''
      and keyring.pass  = ''
      and keyring.label = '';
-     keyring.path = '*SYSTEM';
+    keyring.path = '*SYSTEM';
   endif;
 
 
@@ -1386,6 +1480,52 @@ end-proc;
 
 
 /// =======================================================================
+//   ftptcp_writeblk
+//    write a fixed-length block of data to a TCP socket
+//
+//    @param = (input) handle to TCP socket
+//    @param = (input) buffer containing line of data to write
+//    @param = (input) length of line of data to write
+//
+//    @return length of the data written or -1 upon error
+/// =======================================================================
+
+dcl-proc ftptcp_writeblk export;
+
+  dcl-pi *n int(20);
+    handle int(10) value;
+    buffer pointer value;
+    buflen uns(20) value;
+  end-pi;
+
+  dcl-s len   int(10);
+  dcl-s total int(20);
+
+  selectSsn(handle);
+
+  total = 0;
+
+  dow buflen > 0;
+
+    len = ftptcp_write(handle: buffer: buflen);
+    if len < 0;
+      return len;
+    endif;
+  
+    buflen -= len;
+    total  += len;
+
+    if buflen > 0;
+      buffer += len;
+    endif;
+  
+  enddo;
+
+  return total;
+end-proc;
+
+
+/// =======================================================================
 //   ftptcp_readln
 //    Read a CRLF delimited line of text from a TCP channel.
 //
@@ -1523,4 +1663,430 @@ dcl-proc ftptcp_getPeerAddr export;
   dotted = %str(inet_ntoa(addr.sin_addr));
   return dotted;
 
+end-proc;
+
+
+/// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//  proxy_tunnel
+//    Establishes a tunnel through an HTTP proxy server
+//    
+//   @param = (i/o) session handle containing session details
+// 
+//  returns 0 if successful, otherwise an HTTP response number
+//          or -1 upon internal error
+/// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+dcl-proc proxy_tunnel;
+
+  dcl-pi *n int(10);
+    handle int(10) value;     
+  end-pi;
+
+  dcl-pr atoi int(10) extproc('atoi');
+    nptr pointer value options(*string);
+  end-pr;
+
+  Dcl-S req        varchar(32766);
+  Dcl-S resp       varchar(32766);
+  Dcl-S authStr    varchar(8190);
+  dcl-s b64AuthStr varchar(10920);
+  dcl-s b64len     int(10);
+  dcl-s len        int(10);
+  dcl-s line       varchar(2048);
+  dcl-s respCode   int(10);
+
+
+  // 
+  //  Build an HTTP request chain for a proxy tunnel
+  //
+
+  Req = 'CONNECT ' + ssn.host + ':' + %char(ssn.port)
+        + ' HTTP/1.1' + CRLF;
+
+  if ssn.port = 80 or ssn.port = 443;
+    req += 'Host: ' + ssn.host + ' HTTP/1.1' + CRLF;
+  else;
+    req += 'Host: ' + ssn.host + ':' + %char(ssn.port) + ' HTTP/1.1' + CRLF;
+  endif;
+
+  Req += 'User-Agent: ftpapi/' + FTPAPI_VERSION + ' HTTP/1.1' + CRLF 
+       + 'Proxy-Connection: keep-alive'  + CRLF;
+
+  if ssn.proxyUser <> '' or ssn.proxyPass <> '';
+    authStr = ssn.proxyUser + ':' + ssn.proxyPass;
+    %len(b64AuthStr) = %len(b64AuthStr:*MAX);
+    b64len = base64_encode( %addr(authStr: *data)
+                          : %len(authStr)
+                          : %addr(b64AuthStr: *data)
+                          : %len(b64AuthStr));
+    if b64Len < 0;
+      %len(b64AuthStr) = 0;
+    else;
+      %len(b64AuthStr) = b64len;
+    endif;
+    Req += 'Proxy-Authorization: Basic ' + b64AuthStr + CRLF;
+  endif;
+
+  Req += CRLF;
+
+  Req = xlate_toNetwork(Req);
+
+
+  // 
+  //  Write the request chain to the TCP channel.
+  //  This tells the proxy to make the connection
+  //
+
+  len = ftptcp_writeblk( handle
+                       : %addr(req:*data)
+                       : %len(req) );
+  if len = -1;
+    return -1;
+  endif;
+
+
+  // 
+  //  Read back the HTTP response chain. It will be
+  //  a series of lines of text. It ends when there's
+  //  a blank line (a line that is only CRLF)
+  //
+
+  resp = '';
+  dou line = x'0d0a' or line = x'0a';
+
+    %len(line) = %len(line: *max);
+    len = ftptcp_readln( handle
+                       : %addr(line: *data)
+                       : %len(line) 
+                       : x'0a' );
+
+    if len = -1;
+      return -1;
+    endif;
+
+    %len(line) = len;
+    resp += line;
+  enddo;               
+
+  if %len(resp) > 0;
+    resp = xlate_toJob(resp);
+  endif;
+
+
+  //
+  // Response should begin like this:
+  //  123456789012345
+  // 'HTTP/1.1 200 OK' + CRLF
+  //
+  //  This means the shortest response possible
+  //  would be 'HTTP/1.1 200' + LF, i.e. 13 chars.
+  //  and position 10 should always start the HTTP
+  //  response code (200 in this example)
+  //
+  //  A response from 200 - 299 means it successfully
+  //  established the tunnel.
+  //
+
+  if %len(resp) >= 13;
+    respCode = atoi(%subst(resp:10:4));
+  else;
+    respCode = -1;
+  endif;
+
+  if respCode < 200 or respCode > 299;
+    setError( FTP_PRXFAIL
+            : 'Unable to start a proxy tunnel');
+    return -1;
+  else;
+    return 0;
+  endif;
+
+end-proc;
+
+
+
+/// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//  base64_encode:  Encode binary data using Base64 encoding
+//
+//       Input = (input) pointer to data to convert
+//    InputLen = (input) length of data to convert
+//      Output = (output) pointer to memory to receive output
+//     OutSize = (input) size of area to store output in
+//
+//  Returns length of encoded data, or space needed to encode
+//      data. If this value is greater than OutSize, then
+//      output may have been truncated.
+/// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+dcl-proc base64_encode export;
+
+  dcl-pi *n uns(10);
+    Input          Pointer    VALUE;
+    InputLen       Uns(10)    VALUE;
+    Output         Pointer    VALUE;
+    OutputSize     Uns(10)    VALUE;
+  end-pi;
+
+  dcl-ds b64_alphabet static;
+    alphabet char(64) inz('ABCDEFGHIJKLMNOPQRSTUVWXYZ+
+                           abcdefghijklmnopqrstuvwxyz+
+                           0123456789+/');
+    base64f  char(1)  dim(64) overlay(ALPHABET);
+  end-ds;
+
+  dcl-ds *N;
+    Numb           Uns(5)     Pos(1) INZ(0);
+    Byte           Char(1)    Pos(2);
+  end-ds;
+
+  dcl-ds data BASED(INPUT);
+    B1  char(1);
+    B2  char(1);
+    B3  char(1);
+  end-ds;
+
+  Dcl-S OutData      Char(4)    BASED(OUTPUT);
+  Dcl-S Temp         Char(4);
+  Dcl-S Pos          Int(10);
+  Dcl-S OutLen       Int(10);
+  Dcl-S Save         Char(1);
+
+  Pos = 1;
+
+  dow Pos <= InputLen;
+
+      // -------------------------------------------------
+      // First output byte comes from bits 1-6 of input
+      // -------------------------------------------------
+
+    Byte = %bitand(B1: x'FC');
+    Numb /= 4;
+    %subst(Temp:1) = base64f(Numb+1);
+
+      // -------------------------------------------------
+      // Second output byte comes from bits 7-8 of byte 1
+      //                           and bits 1-4 of byte 2
+      // -------------------------------------------------
+    Byte = %bitand(B1: x'03');
+    Numb *= 16;
+
+    if Pos+1 <= InputLen;
+      Save = Byte;
+      Byte = %bitand(B2: x'F0');
+      Numb /= 16;
+      Byte = %bitor(Save: Byte);
+    endif;
+
+    %subst(Temp: 2) = base64f(Numb+1);
+
+      // -------------------------------------------------
+      // Third output byte comes from bits 5-8 of byte 2
+      //                          and bits 1-2 of byte 3
+      // (or is set to '=' if there was only one byte)
+      // -------------------------------------------------
+
+    if Pos+1 > InputLen;
+      %subst(Temp: 3) = '=';
+    else;
+      Byte = %bitand(B2: x'0F');
+      Numb *= 4;
+
+      if (Pos+2 <= InputLen);
+        Save = Byte;
+        Byte = %bitand(B3: x'C0');
+        Numb /= 64;
+        Byte = %bitor(Save: Byte);
+      endif;
+
+      %subst(Temp:3) = base64f(Numb+1);
+    endif;
+
+      // -------------------------------------------------
+      // Fourth output byte comes from bits 3-8 of byte 3
+      // (or is set to '=' if there was only one/two bytes)
+      // -------------------------------------------------
+
+    if (Pos+2 > InputLen);
+      %subst(Temp:4:1) = '=';
+    else;
+      Byte = %bitand(B3: x'3F');
+      %subst(Temp:4) = base64f(Numb+1);
+    endif;
+
+      // -------------------------------------------------
+      //   Advance to next chunk of data.
+      // -------------------------------------------------
+
+    Input += %size(data);
+    Pos += %size(data);
+    OutLen += %size(Temp);
+
+    if OutLen <= OutputSize;
+      OutData = Temp;
+      Output += %size(Temp);
+    endif;
+
+  enddo;
+
+  return OutLen;
+
+end-proc;
+
+
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//   setupIconv
+//     INTERNAL: Configures translation to/from the
+//       job's CCSID (EBCDIC) to the network (UTF-8)
+//
+//   This will send an *ESCAPE exception upon failure.
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+dcl-proc SetupIconv;
+
+  dcl-ds jobCode    likeds(QtqCode_T) inz(*likeds);
+  dcl-ds netCode    likeds(QtqCode_T) inz(*likeds); 
+  dcl-s  fatalError varchar(100);
+  dcl-s  msgKey     char(4);
+
+  dcl-ds errFail qualified;
+    bytesProv  int(10) inz(0);
+    bytesAvail int(10) inz(0);
+  end-ds;
+
+  jobCode.CCSID = 0;
+  netCode.CCSID = 1208;
+  utfToJob = *all'00';
+  utfToJob.return_value = -1;
+  jobToUtf = *all'00';
+  jobToUtf.return_value = -1;
+  xlate_init = *off;
+
+  jobToUtf = iconv_open(netCode: jobCode);
+  if jobToUtf.return_value >= 0;
+    reset jobCode;
+    reset netCode;
+    jobCode.CCSID = 0;
+    netCode.CCSID = 1208;
+    utfToJob = iconv_open(jobCode: netCode);
+  endif;
+
+  if   utfToJob.return_value < 0
+    or jobToUtf.return_value < 0;
+    fatalError = 'Unable to set up UTF-8 translation';
+    QMHSNDPM( 'CPF9898'
+            : 'QCPFMSG   *LIBL'
+            : fatalError 
+            : %len(fatalError)
+            : '*ESCAPE'
+            : '*'
+            : 0
+            : msgKey
+            : errFail );
+  else;
+    xlate_init = *on;
+  endif;
+
+end-proc;
+
+
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//   do_iconv_real:
+//     INTERNAL: Calls the system's iconv routine to 
+//       convert between character encodings.
+//
+//   @param = (i/o) iconv_t conversion table
+//   @param = (input) data to be converted
+//   @param = (output) converted data ('' upon error)
+//
+//  NOTE: This is meant to be called via the do_iconv 
+//        prototype even though it's do_iconv_real. This
+//        is needed to get a pointer to a CONST parameter,
+//        which isn't normally allowed in RPG.
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+dcl-proc do_iconv_real export;
+
+  dcl-pi *n;
+    ictbl likeds(iconv_t);
+    inp   varchar(32766) options(*varsize);
+    outp  varchar(32766);
+  end-pi;
+
+  dcl-s p_inputBuf  pointer;
+  dcl-s inputLeft   uns(10);
+  dcl-s p_outputBuf pointer;
+  dcl-s outputLeft  uns(10);
+  dcl-s outlen      int(10);
+  dcl-s rc          int(10);
+
+  if xlate_init = *off;
+    setupIconv();
+  endif;
+
+  outputLeft  = %len(outp: *MAX);
+  %len(outp)  = outputLeft;
+  p_outputBuf = %addr(outp: *data);
+
+  inputLeft   = %len(inp);
+  p_inputBuf  = %addr(inp: *data);
+    
+  rc = iconv( ictbl
+            : p_inputBuf
+            : inputLeft
+            : p_outputBuf
+            : outputLeft );
+
+  if rc = ICONV_FAIL;
+    outp = '';
+  else;
+
+    outLen = %len(outp: *MAX) - outputLeft;
+    if outLen <= 0;
+      outp = '';
+    else;
+      %len(outp) = outLen;
+    endif;
+  
+  endif;
+
+  return;
+end-proc;
+
+
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//   xlate_toNetwork
+//     Translate data to the network's character encoding
+//
+//   @param = (input) data to be converted
+//   @return converted data ('' upon error)
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+dcl-proc xlate_toNetwork export;
+  
+  dcl-pi *n varchar(32766) rtnparm;
+    inp varchar(32766) options(*varsize) const;
+  end-pi;
+  dcl-s outp varchar(32766);
+
+  do_iconv(jobToUtf: inp: outp);
+  
+  return outp;
+end-proc;
+
+
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//   xlate_toJob
+//     Translate data to the network's character encoding
+//
+//   @param = (input) data to be converted
+//   @return converted data ('' upon error)
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+dcl-proc xlate_toJob export;
+  
+  dcl-pi *n varchar(32766) rtnparm;
+    inp varchar(32766) options(*varsize) const;
+  end-pi;
+  dcl-s outp varchar(32766);
+
+  do_iconv(utfToJob: inp: outp);
+  
+  return outp;
 end-proc;

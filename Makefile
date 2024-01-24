@@ -154,7 +154,7 @@ $(ILIBRARY)/QRPGLESRC.file: src/rpg/VERSION.rpgleinc | $(ILIBRARY)
 	system -v 'crtsrcpf file($(LIBRARY)/$(basename $(@F))) rcdlen(112)'
 	system -v "chgobjown obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) newown($(OWNER)) curownaut(*revoke)"
 	system -v "grtobjaut obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) user(*public) aut(*use) replace(*yes)"
-	for MBR in ERRNO_H FTPAPI_H FTPTCP_H GSKSSL_H IFSIO_H RECIO_H SOCKET_H VERSION; do
+	for MBR in ERRNO_H FTPAPI_H FTPTCP_H GSKSSL_H IFSIO_H RECIO_H SOCKET_H ICONV_H VERSION; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(rpgle)"; \
 	  cat "src/rpg/$${MBR}.rpgleinc" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done

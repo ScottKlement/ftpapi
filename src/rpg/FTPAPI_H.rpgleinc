@@ -242,6 +242,8 @@
      D FTP_ENDTLS      C                   CONST(88)
       * Error found setting TLS data protection mode
      D FTP_TLSDTA      C                   CONST(89)
+      * Proxy setup failed
+     D FTP_PRXFAIL     C                   CONST(90)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -59,6 +59,10 @@ end-pr;
 //    @param = (input) handle to TCP socket
 //    @param = (input) host name or IP address to connect to
 //    @param = (input) port number to connect to
+//    @param = (input/optional) HTTP proxy to connect through
+//    @param = (input/optional) Port of HTTP proxy (default: 80)
+//    @param = (input/optional) userid for http proxy 
+//    @param = (input/optional) password for http proxy
 //
 //    @return 0 if successfully connected, -1 upon failure
 /// =======================================================================
@@ -67,6 +71,10 @@ dcl-pr ftptcp_connect int(10);
   handle int(10) value;
   host   pointer value options(*string);
   port   int(10) value;
+  proxyHost varchar(256)  const options(*nopass:*omit);
+  proxyPort int(10)       const options(*nopass:*omit);
+  proxyUser varchar(2048) const options(*nopass:*omit);
+  proxyPass varchar(2048) const options(*nopass:*omit);
 end-pr;
 
 
@@ -207,6 +215,24 @@ end-pr;
 
 
 /// =======================================================================
+//   ftptcp_writeblk
+//    write a fixed-length block of data to a TCP socket
+//
+//    @param = (input) handle to TCP socket
+//    @param = (input) buffer containing line of data to write
+//    @param = (input) length of line of data to write
+//
+//    @return length of the data written or -1 upon error
+/// =======================================================================
+
+dcl-pr ftptcp_writeblk int(20);
+  handle int(10) value;
+  buffer pointer value;
+  buflen uns(20) value;
+end-pr;
+
+
+/// =======================================================================
 //   ftptcp_readln
 //    Read a CRLF delimited line of text from a TCP channel.
 //
@@ -236,4 +262,30 @@ end-pr;
 
 dcl-pr ftptcp_getPeerAddr varchar(256);
   handle int(10) value;
+end-pr;
+
+
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//   xlate_toNetwork
+//     Translate data to the network's character encoding
+//
+//   @param = (input) data to be converted
+//   @return converted data ('' upon error)
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+dcl-pr xlate_toNetwork varchar(32766) rtnparm;
+  inp varchar(32766) options(*varsize) const;
+end-pr;
+
+
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//   xlate_toJob
+//     Translate data to the network's character encoding
+//
+//   @param = (input) data to be converted
+//   @return converted data ('' upon error)
+/// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+dcl-pr xlate_toJob varchar(32766) rtnparm;
+  inp varchar(32766) options(*varsize) const;
 end-pr;

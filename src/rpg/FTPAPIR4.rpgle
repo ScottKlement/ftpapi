@@ -5497,7 +5497,7 @@
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       *  Translate a buffer from EBCDIC codepage 37 to ASCII 437
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     P ToASCII         B
+     P ToASCII         B                   
      D ToASCII         PI            10I 0
      D   peBuffer                 32766A   options(*varsize)
      D   peBufSize                   10U 0 value
