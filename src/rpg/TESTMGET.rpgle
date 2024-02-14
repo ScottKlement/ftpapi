@@ -73,6 +73,7 @@
      D fd              S             10I 0
      D ErrNum          S             10I 0
      D gotfiles        S             10I 0
+     D folder          s            256a
 
       ****************************************************************
       ** This tells FTPAPIR4 to log the FTP session to the joblog
@@ -90,9 +91,9 @@
       **  If we don't receive data for 120 seconds, the connection
       **  will "time-out"
       ****************************************************************
-     C                   eval      fd = ftp_conn('ftp.freebsd.com':
+     C                   eval      fd = ftp_conn('ftp2.freebsd.org':
      C                                           'anonymous':
-     C                                           'bgates@microsoft.com':
+     C                                           'ftp@':
      C                                            FTP_PORT:
      C                                            120)
 
@@ -106,7 +107,11 @@
       ** get a list of up to 50 files in the pub/FreeBSD/tools dir
       ** (we intend to download all the of these files)
       ****************************************************************
- B01 c                   if        ftp_chdir(fd: 'pub/FreeBSD/tools') < 0
+     C*0N01Factor1+++++++Opcode&ExtExtended-factor2+++++++++++++++++++++++++
+     c                   eval      folder = 'pub/FreeBSD-Archive'
+     c                                    + '/old-releases/i386'
+     c                                    + '/2.2.7-RELEASE/floppies'
+     c                   if        ftp_chdir(fd: folder) < 0
      c                   callp     CompMsg(ftp_errorMsg(fd))
      c                   callp     ftp_quit(fd)
      c                   eval      *inlr = *on

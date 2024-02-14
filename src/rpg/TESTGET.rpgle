@@ -34,8 +34,8 @@
       *  from ftp.freebsd.org.
       *
       *  1)  Connect to the server
-      *  2)  switch to the pub/FreeBSD/tools directory
-      *  3)  download fips.exe in binary mode.
+      *  2)  switch to the pub/FreeBSD directory
+      *  3)  download README.TXT in binary mode.
       *  4)  Log Out.
       *
  CPY  /COPY FTPAPI_H
@@ -59,7 +59,7 @@
      c                   return
  E01 c                   endif
 
-      * Change to the FreeBSD tools directory on
+      * Change to the FreeBSD directory on
       *  this FTP server.  Deal with any errors.
  B01 c                   if        ftp_chdir(ftp: 'pub/FreeBSD') < 0
      c                   eval      Msg = ftp_errorMsg(ftp)
