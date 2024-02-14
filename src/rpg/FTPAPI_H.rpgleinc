@@ -38,6 +38,7 @@
       **********************************************************************
      D FTP_EXTLOG      C                   CONST(1)
      D FTP_EXTSTS      C                   CONST(2)
+     D FTP_EXTLOGLONG  C                   CONST(3)
 
       * Default port for FTP control connections:
      D FTP_PORT        C                   CONST(21)
@@ -264,7 +265,7 @@
       * Returns the socket descriptor of the connection upon
       *            success, or -1 upon error.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_Conn        PR            10I 0
+     D FTP_Conn        PR            10I 0 
      D   peHost                     256A   const
      D   peUser                      32A   const
      D   pePass                      64A   const
@@ -288,9 +289,9 @@
       *
       *  returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_chdir       PR            10I 0
+     D FTP_chdir       PR            10I 0 
      D   peSocket                    10I 0 value                                              
-     D   peNewDir                   256A   const
+     D   peNewDir                  5000A   varying const options(*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -454,10 +455,10 @@
       *
       *     Returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_rename      PR            10I 0
+     D FTP_rename      PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peOldName                  256A   const
-     D   peNewName                  256A   const
+     D   peOldName                 5000A   varying const options(*trim)
+     D   peNewName                 5000A   varying const options(*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -468,9 +469,9 @@
       *
       *     Returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_delete      PR            10I 0
+     D FTP_delete      PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peFile                     256A   const
+     D   peFile                    5000A   varying const options(*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -481,9 +482,9 @@
       *
       *     Returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_rmdir       PR            10I 0
+     D FTP_rmdir       PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peDirName                  256A   const
+     D   peDirName                 5000A   varying const options(*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -494,9 +495,9 @@
       *
       *     Returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_mkdir       PR            10I 0
+     D FTP_mkdir       PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peDirName                  256A   const
+     D   peDirName                 5000A   varying const options(*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -507,7 +508,7 @@
       *
       *     Returns the directory name, or *BLANKS upon failure
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_rtvcwd      PR           256A
+     D FTP_rtvcwd      PR           512A   
      D   peSocket                    10I 0 value
 
 
@@ -529,9 +530,9 @@
       *  by calling the FTP_ERROR routine.  The error number returned
       *  for this response will always be FTP_QUOTE
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_quote       PR            10I 0
+     D FTP_quote       PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peCommand                  256A   const
+     D   peCommand                 5000A   varying const options(*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -546,9 +547,9 @@
       *
       *     Returns -1 upon error, or the size of the file upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_size        PR            16P 0
+     D FTP_size        PR            16P 0 
      D   peSocket                    10I 0 value
-     D   peFile                     256A   const
+     D   peFile                    5000A   varying const options(*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -564,9 +565,9 @@
       *
       *     Returns -1 upon error, or 0 upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_mtime       PR            16P 0
+     D FTP_mtime       PR            16P 0 
      D   peSocket                    10I 0 value
-     D   peFile                     256A   const
+     D   peFile                    5000A   varying const options(*trim)
      D   peModTime                     Z
 
 
@@ -741,9 +742,9 @@
       *                    returned.  (can be larger than peMaxEntry if
       *                    your array wasnt large enough)
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_dir         PR            10I 0
+     D FTP_dir         PR            10I 0 
      D   peSocket                    10I 0 value                                              
-     D   pePathArg                  256A   const
+     D   pePathArg                 5000A   varying const options(*trim)
      D   peMaxEntry                  10I 0 value
      D   peRtnList                     *   value
      D   peRtnSize                   10I 0
@@ -760,9 +761,9 @@
       *        peDescr   = descriptor to pass to peFunction below                             
       *     peFunction   = procedure to call for each directory entry                         
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_dirraw      PR            10I 0
+     D FTP_dirraw      PR            10I 0 
      D   peSocket                    10I 0 value                                              
-     D   pePathArg                  256A   const
+     D   pePathArg                 5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peFunction                    *   PROCPTR value
 
@@ -784,9 +785,9 @@
       *                    your array wasnt large enough)
       *
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_list        PR            10I 0
+     D FTP_list        PR            10I 0 
      D   peSocket                    10I 0 value                                              
-     D   pePathArg                  256A   const
+     D   pePathArg                 5000A   varying const options(*trim)
      D   peMaxEntry                  10I 0 value
      D   peRtnList                     *   value
      D   peRtnSize                   10I 0
@@ -804,9 +805,9 @@
       *     peFunction   = Procedure to send each line of the resulting                       
       *                    listing to.                                                        
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_lstraw      PR            10I 0
+     D FTP_lstraw      PR            10I 0 
      D   peSocket                    10I 0 value                                              
-     D   pePathArg                  256A   const
+     D   pePathArg                 5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peFunction                    *   PROCPTR value
 
@@ -822,10 +823,10 @@
       *
       *   returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_get         PR            10I 0
+     D FTP_get         PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
-     D   peLocal                    256A   const options(*nopass)
+     D   peRemote                  5000A   varying const options(*trim)
+     D   peLocal                   5000A   varying const options(*nopass:*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -844,9 +845,9 @@
       *
       *  returns 0 upon success, or -1 upon error.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_getraw      PR            10I 0
+     D FTP_getraw      PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
+     D   peRemote                  5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peWrtProc                     *   PROCPTR value
 
@@ -862,10 +863,10 @@
       *
       *   returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_put         PR            10I 0
+     D FTP_put         PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
-     D   peLocal                    256A   const options(*nopass)
+     D   peRemote                  5000A   varying const options(*trim)
+     D   peLocal                   5000A   varying const options(*nopass:*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -884,9 +885,9 @@
       *
       *  returns 0 upon success, or -1 upon error.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_putraw      PR            10I 0
+     D FTP_putraw      PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
+     D   peRemote                  5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peReadProc                    *   PROCPTR value
 
@@ -902,10 +903,10 @@
       *
       *   returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_append      PR            10I 0
+     D FTP_append      PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
-     D   peLocal                    256A   const options(*nopass)
+     D   peRemote                  5000A   varying const options(*trim)
+     D   peLocal                   5000A   varying const options(*nopass:*trim)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -924,16 +925,17 @@
       *
       *  returns 0 upon success, or -1 upon error.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_appraw      PR            10I 0
+     D FTP_appraw      PR            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
+     D   peRemote                  5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peReadProc                    *   PROCPTR value
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       * FTP_quit:
-      *        parms:   peSocket = descriptor returned by ftp_conn
+      *  parms:
+      *   peSocket = descriptor returned by ftp_conn/ftp_open
       *
       *  This procedure logs off of the FTP server and closes
       *  the network connection.
@@ -968,7 +970,7 @@
       *  match one of the constants defined in FTPAPI_H.  This                                
       *  can be used by programs to anticipate/handle errors.                                 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                        
-     D FTP_errorMsg    PR            60A                                                      
+     D FTP_errorMsg    PR           512A                                                      
      D   peSocket                    10I 0 value                                              
      D   peErrorNum                  10I 0       options(*nopass)                             
 
@@ -1132,14 +1134,14 @@
       *
       *  returns -1 upon failure, or 0 upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D ftp_ParseURL    PR            10I 0
-     D  peURL                       256A   const
+     D ftp_ParseURL    PR            10I 0 
+     D  peURL                     16383A   varying const
      D  peService                    32A
      D  peUserName                   32A
      D  pePassword                   32A
      D  peHost                      256A
      D  pePort                       10I 0
-     D  pePath                      256A
+     D  pePath                     5000A   varying
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1155,8 +1157,8 @@
       *  returns -1 upon failure, or 0 upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      D FTP_url_get_raw...
-     D                 PR            10I 0
-     D  peURL                       256A   const
+     D                 PR            10I 0 
+     D  peURL                     16383A   const
      D  peDescr                      10I 0 value
      D  peWrtProc                      *   PROCPTR value
      D  peASCII                       1N   const options(*nopass)
@@ -1175,9 +1177,9 @@
       *
       *  returns -1 upon failure, or 0 upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_url_get     PR            10I 0
-     D  peURL                       256A   const
-     D  peLocal                     256A   const options(*nopass)
+     D FTP_url_get     PR            10I 0 
+     D  peURL                     16383A   varying const
+     D  peLocal                    5000A   varying const options(*nopass:*trim)
      D  peASCII                       1N   const options(*nopass)
      D  peTimeout                    10I 0 value options(*nopass)
      D  peAcct                       32A   const options(*nopass)
@@ -1293,9 +1295,9 @@
       *
       *  returns -1 upon error, or 0 if successful
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     D FTP_Restart     PR            10i 0
+     D FTP_Restart     PR            10i 0 
      D    peSocket                   10i 0 value
-     D    peFile                    256A   const options(*omit)
+     D    peFile                   5000A   varying const options(*omit)
      D    pePos                      10u 0 const options(*nopass:*omit)
 
 

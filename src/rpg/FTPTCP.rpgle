@@ -56,7 +56,7 @@ dcl-c CRLF        x'0d25';
 
 dcl-pr setError;
   errnum int(10) value;
-  errmsg char(60) const;
+  errmsg varchar(512) const;
 end-pr;
 
 dcl-ds vanillaSsn qualified;

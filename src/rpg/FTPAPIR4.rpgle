@@ -1,6 +1,6 @@
       /copy VERSION
 
-      *-                                                                            +
+     /*                                                                             +
       * Copyright (c) 2001-2023 Scott C. Klement                                    +
       * All rights reserved.                                                        +
       *                                                                             +
@@ -98,7 +98,7 @@
 
      D Reply           PR            10I 0
      D   peSocket                    10I 0 value
-     D   peRespMsg                  256A   options(*nopass)
+     D   peRespMsg                  512A   varying options(*nopass)
 
      D RecvLine        PR            10I 0
      D   peSocket                    10I 0
@@ -112,7 +112,7 @@
 
      D SendLine        PR            10I 0
      D   peSocket                    10I 0 value
-     D   peData                     261A   const
+     D   peData                    5261A   varying const options(*trim)
 
      D SendLine2       PR            10I 0
      D   peSocket                    10I 0 value
@@ -160,7 +160,7 @@
 
      D SetError        PR
      D   peErrNum                    10I 0 value
-     D   peErrMsg                    60A   const
+     D   peErrMsg                   512A   varying const
 
      D SetSessionError...
      D                 PR
@@ -174,15 +174,20 @@
      D   pePacked                    15S 5 VALUE
 
      D DiagLog         PR
-     D   peMsgTxt                   256A   Const
+     D   peMsgTxt                  5256A   varying Const
 
      D DiagMsg         PR
-     D   peMsgTxt                   256A   Const
+     D   peMsgTxt                  5256A   varying Const
      D   peSession                   10I 0 value
 
      D wkLogProc       S               *   procptr inz(*NULL)
      D LogProc         PR                  ExtProc(wkLogProc)
      D   peMsgTxt                   256A   Const
+     D   peExtra                       *   value
+
+     D wkLogLongProc   S               *   procptr inz(*NULL)
+     D LogLongProc     PR                  ExtProc(wkLogLongProc)
+     D   peMsgTxt                  5256A   varying const
      D   peExtra                       *   value
 
      D wkStsProc       S               *   procptr inz(*NULL)
@@ -205,8 +210,8 @@
      D   peMember                    10A
      D   peType                      10A
 
-     D fixpath         PR           256A
-     D   pePath                     256A   const
+     D fixpath         PR          5000A   varying
+     D   pePath                    5000A   varying const options(*trim)
      D   peObjType                   10A
      D   peCodePg                    10I 0
 
@@ -219,7 +224,7 @@
      D   peAttrib                    10A
      D   peSrcFile                    1A
 
-     D getdir          PR           256A
+     D getdir          PR          5000A   varying
 
      D S_ISNATIVE      PR             1A
      D    peMode                     10U 0 value
@@ -308,7 +313,7 @@
      D rtvJobCp        PR            10I 0
 
      D lclFileSiz      PR            16P 0
-     D   pePath                     256A   const
+     D   pePath                    5000A   varying const options(*trim)
 
      D GetTrimLen      PR            16P 0
      D   peBuffer                 32766A   options(*varsize)
@@ -354,6 +359,27 @@
      D initFtpApi...
      D                 PR
 
+     D PARAM_copy_real...
+     D                 PR
+     D   dst                      16384a   varying options(*varsize)
+     D   src                      16384a   varying options(*varsize)
+     D p_PARAM_copy    s               *   procptr 
+     D                                     inz(%paddr(PARAM_copy_real))
+     D PARAM_copy...
+     D                 PR                  extproc(p_PARAM_copy)
+     D   dst                      16384a   varying options(*varsize)
+     D   src                      16384a   varying const options(*varsize)
+     D PARAM_return_real...
+     D                 PR
+     D   dst                       5000a   varying
+     D   src                       5000A   varying const options(*trim)
+     D p_PARAM_return  s               *   procptr
+     D                                     inz(%paddr(PARAM_return_real))
+     D PARAM_return    PR                  extproc(p_PARAM_return)
+     D   dst                       5000a   varying
+     D   src                       5000A   varying const options(*trim)
+
+
       *  "Socket Descriptor" to identify the default session.
       *  The default session is the session that is used in
       *  case that there is no session, e.g. FTP_conn().
@@ -386,7 +412,7 @@
       *  on a FTP connection .
      D wkSession       DS                  occurs(MAX_SESSION)
      D  wkActive                      1A   INZ(*OFF)
-     D  wkErrMsg                     60A   INZ
+     D  wkErrMsg                    512A   varying INZ
      D  wkErrNum                     10I 0 INZ
      D  wkSocket                     10I 0 INZ(INT_NULL)
      D  wkBinary                      1A   INZ(*ON)
@@ -410,6 +436,7 @@
      D  wkTotBytes                   16P 0 INZ
      D  wkSizereq                     1A   INZ(*ON)
      D  wkLogExit                      *   procptr inz(*NULL)
+     D  wkLogLongExit                  *   procptr inz(*NULL)
      D  wkStsExit                      *   procptr inz(*NULL)
      D  wkLogExtra                     *   inz(*NULL)
      D  wkStsExtra                     *   inz(*NULL)
@@ -648,12 +675,15 @@
       *  returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_chdir       B                   EXPORT
-     D FTP_chdir       PI            10I 0
+     D FTP_chdir       PI            10I 0 
      D   peSession                   10I 0 value
-     D   peNewDir                   256A   const
+     D   peNewDir                  5000A   varying const options(*trim)
 
      D wwReply         S              5I 0
-     D wwRepMsg        S            256A
+     D wwRepMsg        S            512A   varying
+     D newDir          s           5000a   varying
+
+     c                   callp     PARAM_copy(newDir: peNewDir)
 
      c                   callp     initFtpApi
 
@@ -662,12 +692,12 @@
      c                   return    -1
      c                   endif
 
-     c                   if        peNewDir = '..'
+     c                   if        newDir = '..'
      c                   if        SendLine(wkSocket: 'CDUP') < 0
      c                   return    -1
      c                   endif
      c                   else
-     c                   if        SendLine(wkSocket: 'CWD '+peNewDir)<0
+     c                   if        SendLine(wkSocket: 'CWD '+ newDir)<0
      c                   return    -1
      c                   endif
      c                   endif
@@ -962,13 +992,18 @@
       *     Returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_rename      B                   EXPORT
-     D FTP_rename      PI            10I 0
+     D FTP_rename      PI            10I 0 
      D   peSession                   10I 0 value
-     D   peOldName                  256A   const
-     D   peNewName                  256A   const
+     D   peOldName                 5000A   varying const options(*trim)
+     D   peNewName                 5000A   varying const options(*trim)
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
+     D oldName         s           5000a   varying
+     D newName         s           5000a   varying
+
+     c                   callp     PARAM_copy(oldName: peOldName)
+     c                   callp     PARAM_copy(newName: peNewName)
 
      c                   callp     initFtpApi
 
@@ -978,7 +1013,7 @@
      c                   endif
 
       * Here's the name we want to RENAME FROM (RNFR)
-     c                   if        SendLine(wkSocket:'RNFR ' + peOldName)<0
+     c                   if        SendLine(wkSocket:'RNFR ' + oldName)<0
      c                   return    -1
      c                   endif
 
@@ -993,7 +1028,7 @@
      c                   endif
 
       * Here's the name we want to RENAME TO (RNTO)
-     c                   if        SendLine(wkSocket:'RNTO ' + peNewName)<0
+     c                   if        SendLine(wkSocket:'RNTO ' + newName)<0
      c                   return    -1
      c                   endif
 
@@ -1020,13 +1055,16 @@
       *     Returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_delete      B                   EXPORT
-     D FTP_delete      PI            10I 0
+     D FTP_delete      PI            10I 0 
      D   peSession                   10I 0 value
-     D   peFile                     256A   const
+     D   peFile                    5000A   varying const options(*trim)
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
+     D fileName        s           5000a   varying
 
+     c                   callp     PARAM_copy(filename: peFile)
+ 
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSession) < 0
@@ -1035,7 +1073,7 @@
      c                   endif
 
       * Send delete command to server:
-     c                   if        SendLine(wkSocket: 'DELE ' + peFile)<0
+     c                   if        SendLine(wkSocket: 'DELE ' + fileName)<0
      c                   return    -1
      c                   endif
 
@@ -1064,7 +1102,7 @@
      D FTP_noop        PI            10I 0
      D   peSession                   10I 0 value
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1102,13 +1140,16 @@
       *     Returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_rmdir       B                   EXPORT
-     D FTP_rmdir       PI            10I 0
+     D FTP_rmdir       PI            10I 0 
      D   peSession                   10I 0 value
-     D   peDirName                  256A   const
+     D   peDirName                 5000A   varying const options(*trim)
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
+     D dirName         s           5000a   varying
 
+     c                   callp     PARAM_copy(dirName: peDirName)
+ 
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSession) < 0
@@ -1117,7 +1158,7 @@
      c                   endif
 
       * send remove directory command:
-     c                   if        SendLine(wkSocket:'RMD ' + peDirName)<0
+     c                   if        SendLine(wkSocket:'RMD ' + dirName)<0
      c                   return    -1
      c                   endif
 
@@ -1144,13 +1185,15 @@
       *     Returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_mkdir       B                   EXPORT
-     D FTP_mkdir       PI            10I 0
+     D FTP_mkdir       PI            10I 0 
      D   peSession                   10I 0 value
-     D   peDirName                  256A   const
+     D   peDirName                 5000A   varying const options(*trim)
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
+     D dirName         s           5000a   varying
 
+     c                   callp     PARAM_copy(dirName: peDirName)
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSession) < 0
@@ -1159,7 +1202,7 @@
      c                   endif
 
       * send make directory command:
-     c                   if        SendLine(wkSocket: 'MKD ' + peDirName)<0
+     c                   if        SendLine(wkSocket: 'MKD ' + dirName)<0
      c                   return    -1
      c                   endif
 
@@ -1169,6 +1212,7 @@
      c                   return    -1
      c                   endif
      c                   if        wwReply <> 257
+     c                               and wwReply <> 250
      c                   callp     SetError(FTP_MKDERR: wwMsg)
      c                   return    -1
      c                   endif
@@ -1186,11 +1230,11 @@
       *     Returns the directory name, or *BLANKS upon failure
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_rtvcwd      B                   EXPORT
-     D FTP_rtvcwd      PI           256A
+     D FTP_rtvcwd      PI           512A   
      D   peSession                   10I 0 value
 
-     D wwMsg           S            256A
-     D wwDir           S            256A
+     D wwMsg           S            512A   varying
+     D wwDir           S            512A
      D wwMsgLen        S              5I 0
      D wwLen           S              5I 0
      D wwPos           S              5I 0
@@ -1225,7 +1269,7 @@
      c                   eval      wwDir = *blanks
      c                   eval      wwLen = 0
      c                   eval      wwState = 0
-     C     ' '           checkr    wwMsg         wwMsgLen
+     c                   eval      wwMsgLen = %len(wwMsg)
 
      c                   do        wwMsgLen      wwPos
      c                   eval      wwCh = %subst(wwMsg:wwPos:1)
@@ -1282,13 +1326,15 @@
       *  for the reply code will always be FTP_QTEMSG
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_quote       B                   EXPORT
-     D FTP_quote       PI            10I 0
+     D FTP_quote       PI            10I 0 
      D   peSession                   10I 0 value
-     D   peCommand                  256A   const
+     D   peCommand                 5000A   varying const options(*trim)
 
      D wwReply         S             10I 0
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
+     D command         s           5000a   varying
 
+     c                   callp     PARAM_copy(command: peCommand)
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSession) < 0
@@ -1297,14 +1343,14 @@
      c                   endif
 
       * Make sure we've got something to send.
-     c                   if        peCommand = *blanks
+     c                   if        %len(command) < 1 or command = *blanks
      c                   callp     SetError(FTP_NOCMD: 'You must supply ' +
      c                              'a command.')
      c                   return    -1
      c                   endif
 
       * send whatever command was given to us:
-     c                   if        SendLine(wkSocket: peCommand) < 0
+     c                   if        SendLine(wkSocket: command) < 0
      c                   return    -1
      c                   endif
 
@@ -1332,16 +1378,18 @@
       *     Returns -1 upon error, or the size of the file upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_size        B                   EXPORT
-     D FTP_size        PI            16P 0
+     D FTP_size        PI            16P 0 
      D   peSession                   10I 0 value
-     D   peFile                     256A   const
+     D   peFile                    5000A   varying const options(*trim)
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwLen           S             10I 0
      D wwSize16        S             16A
      D wwRtnSize       S             16P 0
      D wwReply         S             10I 0
+     D filename        s           5000A   varying
 
+     c                   callp     PARAM_copy(filename: peFile)
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSession) < 0
@@ -1361,7 +1409,7 @@
      c                   endif
 
       * send size command:
-     c                   if        SendLine(wkSocket: 'SIZE ' + peFile)<0
+     c                   if        SendLine(wkSocket: 'SIZE ' + filename)<0
      c                   return    -1
      c                   endif
 
@@ -1377,7 +1425,7 @@
 
       * Get the size from the returned message
      c                   eval      wwMsg = %trim(wwMsg)
-     c     ' '           checkr    wwMsg         wwLen
+     c                   eval      wwLen = %len(wwMsg)
      c                   if        wwLen < 16
      c                   eval      wwMsg = %subst('0000000000000000':
      c                                   1:16-wwLen) + wwMsg
@@ -1413,12 +1461,12 @@
       *     Returns -1 upon error, or 0 upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_mtime       B                   EXPORT
-     D FTP_mtime       PI            16P 0
+     D FTP_mtime       PI            16P 0 
      D   peSession                   10I 0 value
-     D   peFile                     256A   const
+     D   peFile                    5000A   varying const options(*trim)
      D   peModTime                     Z
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwLen           S             10I 0
      D wwTemp14        S             14A
      D wwISO           S              8  0
@@ -1426,7 +1474,9 @@
      D wwDateFld       S               D
      D wwTimeFld       S               T
      D wwReply         S             10I 0
+     D filename        s           5000a   varying
 
+     c                   callp     PARAM_copy(filename: peFile)
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSession) < 0
@@ -1435,7 +1485,7 @@
      c                   endif
 
       * send mod time command:
-     c                   if        SendLine(wkSocket: 'MDTM ' + peFile)<0
+     c                   if        SendLine(wkSocket: 'MDTM ' + filename)<0
      c                   return    -1
      c                   endif
 
@@ -1451,7 +1501,7 @@
 
       * This extracts the date & time from the returned value:
      c                   eval      wwMsg = %trim(wwMsg)
-     c     ' '           checkr    wwMsg         wwLen
+     c                   eval      wwLen = %len(wwMsg)
      c                   if        wwLen <> 14
      c                   callp     SetError(FTP_MODPRS: 'Mod time format '+
      c                               'not recognized ')
@@ -1508,11 +1558,11 @@
       *     Returns -1 upon error, or 0 upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_AddPfm      B                   EXPORT
-     D FTP_AddPfm      PI            16P 0
+     D FTP_AddPfm      PI            16P 0 
      D   peSession                   10I 0 value
      D   peParms                    256A   const
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1558,7 +1608,7 @@
      D   peSocket                    10I 0 value
      D   peParms                    256A   const
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1604,7 +1654,7 @@
      D   peSocket                    10I 0 value
      D   peParms                    256A   const
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1650,7 +1700,7 @@
      D   peSocket                    10I 0 value
      D   peParms                    256A   const
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1696,7 +1746,7 @@
      D   peSocket                    10I 0 value
      D   peParms                    256A   const
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1742,7 +1792,7 @@
      D   peSocket                    10I 0 value
      D   peParms                    256A   const
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1788,7 +1838,7 @@
      D   peSocket                    10I 0 value
      D   peParms                    256A   const
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1836,7 +1886,7 @@
      D   peSocket                    10I 0 value
      D   peCommand                 1000A   const
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1882,7 +1932,7 @@
      D   peSocket                    10I 0 value
      D   peFormat                     5I 0 value
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
 
      c                   callp     initFtpApi
@@ -1929,15 +1979,17 @@
       *                    your array wasnt large enough)
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_dir         B                   EXPORT
-     D FTP_dir         PI            10I 0
+     D FTP_dir         PI            10I 0 
      D   peSocket                    10I 0 value
-     D   pePathArg                  256A   const
+     D   pePathArg                 5000A   varying const options(*trim)
      D   peMaxEntry                  10I 0 value
      D   peRtnList                     *   value
      D   peRtnSize                   10I 0
 
      D wwRC            S             10I 0
+     D pathArg         s           5000a   varying
 
+     C                   callp     PARAM_copy(pathArg: pePathArg)
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSocket) < 0
@@ -1950,7 +2002,7 @@
      c                   eval      wk_p_RtnList = peRtnList
      c                   eval      wk_p_RtnPos  = wk_p_RtnList
 
-     c                   eval      wwRC = FTP_dirraw(peSocket: pePathArg:
+     c                   eval      wwRC = FTP_dirraw(peSocket: pathArg:
      c                                      -1: %paddr('LIST2ARRAY'))
      c                   if        wwRC < 0
      c                   return    -1
@@ -1973,17 +2025,19 @@
       *     peFunction   = procedure to call for each directory entry
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_dirraw      B                   EXPORT
-     D FTP_dirraw      PI            10I 0
+     D FTP_dirraw      PI            10I 0 
      D   peSocket                    10I 0 value
-     D   pePathArg                  256A   const
+     D   pePathArg                 5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peFunction                    *   PROCPTR value
 
      D wwSock          S             10I 0
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
      D wwBinary        S              1A
+     D pathArg         s           5000a   varying
 
+     c                   callp     PARAM_copy(pathArg: pePathArg)
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSocket) < 0
@@ -2008,7 +2062,7 @@
      c                   endif
 
       * Tell server to do a directory list
-     c                   if        SendLine(wkSocket: 'LIST ' + pePathArg)<0
+     c                   if        SendLine(wkSocket: 'LIST ' + pathArg)<0
      c                   callp     ftptcp_close(wwSock)
      c                   return    -1
      c                   endif
@@ -2075,15 +2129,17 @@
       *
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_list        B                   EXPORT
-     D FTP_list        PI            10I 0
+     D FTP_list        PI            10I 0 
      D   peSocket                    10I 0 value
-     D   pePathArg                  256A   const
+     D   pePathArg                 5000A   varying const options(*trim)
      D   peMaxEntry                  10I 0 value
      D   peRtnList                     *   value
      D   peRtnSize                   10I 0
 
      D wwRC            S             10I 0
+     D pathArg         s           5000a   varying
 
+     c                   callp     PARAM_copy(pathArg: pePathArg)
      c                   callp     initFtpApi
 
      c                   if        selectSession(peSocket) < 0
@@ -2096,7 +2152,7 @@
      c                   eval      wk_p_RtnList = peRtnList
      c                   eval      wk_p_RtnPos  = wk_p_RtnList
 
-     c                   eval      wwRC = FTP_lstraw(peSocket: pePathArg:
+     c                   eval      wwRC = FTP_lstraw(peSocket: pathArg:
      c                                      -1: %paddr('LIST2ARRAY'))
      c                   if        wwRC < 0
      c                   return    -1
@@ -2122,14 +2178,17 @@
      P FTP_lstraw      B                   EXPORT
      D FTP_lstraw      PI            10I 0
      D   peSocket                    10I 0 value
-     D   pePathArg                  256A   const
+     D   pePathArg                 5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peFunction                    *   PROCPTR value
 
      D wwSock          S             10I 0
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwReply         S             10I 0
      D wwBinary        S              1A
+     D pathArg         s           5000a   varying
+
+     c                   callp     PARAM_copy(pathArg: pePathArg)
 
      c                   callp     initFtpApi
 
@@ -2155,7 +2214,7 @@
      c                   endif
 
       * Tell server to do a directory list
-     c                   if        SendLine(wkSocket: 'NLST ' + pePathArg)<0
+     c                   if        SendLine(wkSocket: 'NLST ' + pathArg)<0
      c                   callp     ftptcp_close(wwSock)
      c                   return    -1
      c                   endif
@@ -2218,20 +2277,21 @@
      P FTP_get         B                   EXPORT
      D FTP_get         PI            10I 0
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
-     D   peLocal                    256A   const options(*nopass)
+     D   peRemote                  5000A   varying const options(*trim)
+     D   peLocal                   5000A   varying const options(*trim:*nopass)
 
      d p_close         S               *   procptr
      D CloseMe         PR            10I 0 ExtProc(p_close)
      D   descriptor                  10I 0 value
 
-     D wwLocal         S            257A
      D wwErrMsg        S            256A
      D wwFD            S             10I 0
      D wwRC            S             10I 0
      D p_write         S               *   procptr
      D wwSaveDbg       s                   like(wkDebug)
      D wwSaveMode      s              1A
+     D local           s           5000a   varying
+     D remote          s           5000a   varying
 
      c                   callp     initFtpApi
 
@@ -2240,11 +2300,13 @@
      c                   return    -1
      c                   endif
 
+     c                   callp     PARAM_copy(remote: peRemote)
+
       * figure out pathname
      c                   if        %parms >= 3
-     c                   eval      wwLocal = peLocal
+     c                   callp     PARAM_copy(local: peLocal)
      c                   else
-     c                   eval      wwLocal = peRemote
+     c                   eval      local = remote
      c                   endif
 
       * get total number of bytes to receive
@@ -2255,12 +2317,12 @@
      c                   eval      wwSaveDbg = wkDebug
      c                   eval      wkDebug = *Off
      c                   eval      wkTotBytes = FTP_size(peSocket :
-     c                                                   peRemote )
+     c                                                   remote )
      c                   eval      wkDebug = wwSaveDbg
 
       * open the file to retrieve
      c                   eval      wwSaveMode = wkLineMode
-     c                   eval      wwFD = OpnFile( wwLocal
+     c                   eval      wwFD = OpnFile( local
      C                                           : 'W'
      C                                           : p_write
      C                                           : p_close
@@ -2271,7 +2333,7 @@
      c                   endif
 
       * download into the file...
-     c                   eval      wwRC = FTP_getraw(peSocket: peRemote:
+     c                   eval      wwRC = FTP_getraw(peSocket: remote:
      c                                     wwFD: p_write)
      c                   if        wwRC < 0
      c                   eval      wkLineMode = wwSaveMode
@@ -2298,21 +2360,22 @@
       *   returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_put         B                   EXPORT
-     D FTP_put         PI            10I 0
+     D FTP_put         PI            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
-     D   peLocal                    256A   const options(*nopass)
+     D   peRemote                  5000A   varying const options(*trim)
+     D   peLocal                   5000A   varying const options(*trim:*nopass)
 
      D p_close         S               *   procptr
      D CloseMe         PR            10I 0 ExtProc(p_close)
      D   descriptor                  10I 0 value
 
-     D wwLocal         S            257A
      D wwErrMsg        S            256A
      D wwFD            S             10I 0
      D wwRC            S             10I 0
      D p_read          S               *   procptr
      D wwSaveMode      s              1A
+     D local           s           5000a   varying
+     D remote          s           5000a   varying
 
      c                   callp     initFtpApi
 
@@ -2321,19 +2384,21 @@
      c                   return    -1
      c                   endif
 
+     c                   callp     PARAM_copy(remote: peRemote)
+
       * figure out pathname
-     c                   if        %parms > 2
-     c                   eval      wwLocal = peLocal
+     c                   if        %parms >= 3
+     c                   callp     PARAM_copy(local: peLocal)
      c                   else
-     c                   eval      wwLocal = peRemote
+     c                   eval      local = remote
      c                   endif
 
       * get total number of bytes to send
-     c                   eval      wkTotBytes = lclFileSiz(wwLocal)
+     c                   eval      wkTotBytes = lclFileSiz(local)
 
       * open the file to send
      c                   eval      wwSaveMode = wkLineMode
-     c                   eval      wwFD = OpnFile(wwLocal: 'R': p_read:
+     c                   eval      wwFD = OpnFile(local: 'R': p_read:
      c                                         p_close: peSocket)
      c                   if        wwFD < 0
      c                   eval      wkLineMode = wwSaveMode
@@ -2341,7 +2406,7 @@
      c                   endif
 
       * upload data from the file...
-     c                   if        FTP_putraw(peSocket: peRemote: wwFD:
+     c                   if        FTP_putraw(peSocket: remote: wwFD:
      c                                     p_read) < 0
      c                   eval      wkLineMode = wwSaveMode
      c                   callp     CloseMe(wwFD)
@@ -2372,15 +2437,18 @@
       *  returns 0 upon success, or -1 upon error.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_getraw      B                   EXPORT
-     D FTP_getraw      PI            10I 0
+     D FTP_getraw      PI            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
+     D   peRemote                  5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peWrtProc                     *   PROCPTR value
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwSock          S             10I 0
      D wwReply         S             10I 0
+     D remote          s           5000a   varying
+
+     c                   callp     PARAM_copy(remote: peRemote)
 
      c                   callp     initFtpApi
 
@@ -2414,7 +2482,7 @@
       *************************************************
       * Start download
       *************************************************
-     c                   if        SendLine(wkSocket: 'RETR ' + peRemote)<0
+     c                   if        SendLine(wkSocket: 'RETR ' + remote)<0
      c                   callp     ftptcp_close(wwSock)
      c                   return    -1
      c                   endif
@@ -2480,15 +2548,18 @@
       *  returns 0 upon success, or -1 upon error.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_putraw      B                   EXPORT
-     D FTP_putraw      PI            10I 0
+     D FTP_putraw      PI            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
+     D   peRemote                  5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peReadProc                    *   PROCPTR value
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwSock          S             10I 0
      D wwReply         S             10I 0
+     D remote          S           5000a   varying
+
+     c                   callp     PARAM_copy(remote: peRemote)
 
      c                   callp     initFtpApi
 
@@ -2515,7 +2586,7 @@
      c                   return    -1
      c                   endif
 
-     c                   if        SendLine(wkSocket: 'STOR ' + peRemote)<0
+     c                   if        SendLine(wkSocket: 'STOR ' + remote)<0
      c                   callp     ftptcp_close(wwSock)
      c                   return    -1
      c                   endif
@@ -2618,13 +2689,14 @@
       *  optionally also returns the error number, which will
       *  match one of the constants defined in FTPAPI_H.  This
       *  can be used by programs to anticipate/handle errors.
+      * FIXME: Need to fully implement 512
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_errorMsg    B                   EXPORT
-     D FTP_errorMsg    PI            60A
+     D FTP_errorMsg    PI           512A
      D   peSocket                    10I 0 value
      D   peErrorNum                  10I 0 options(*nopass)
 
-     D wwErrMsg        S                   like(wkErrMsg    )
+     D wwErrMsg        S            512a   
      D wwErrNum        S                   like(wkErrNum    )
 
      D sessionIdx      S                   like(wkSessionIdx)
@@ -2824,6 +2896,10 @@
      c                   when      peExitPnt = FTP_EXTLOG
      c                   eval      wkLogExit = peProc
      c                   eval      wkLogProc = peProc
+     c                   eval      wkLogExtra = peExtra
+     c                   when      peExitPnt = FTP_EXTLOGLONG
+     c                   eval      wkLogLongExit = peProc
+     c                   eval      wkLogLongProc = peProc
      c                   eval      wkLogExtra = peExtra
      c                   when      peExitPnt = FTP_EXTSTS
      c                   eval      wkStsExit = peProc
@@ -3061,21 +3137,31 @@
       *   returns -1 upon error, or 0 upon success.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_append      B                   EXPORT
-     D FTP_append      PI            10I 0
+     D FTP_append      PI            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
-     D   peLocal                    256A   const options(*nopass)
+     D   peRemote                  5000A   varying const options(*trim)
+     D   peLocal                   5000A   varying const options(*trim:*nopass)
 
      D p_close         S               *   procptr
      D CloseMe         PR            10I 0 ExtProc(p_close)
      D   descriptor                  10I 0 value
 
-     D wwLocal         S            257A
      D wwErrMsg        S            256A
      D wwFD            S             10I 0
      D wwRC            S             10I 0
      D p_read          S               *   procptr
      D wwSaveMode      s              1A
+     D remote          s           5000a   varying
+     D local           s           5000a   varying
+
+     c                   callp     PARAM_copy(remote: peRemote)
+
+      * figure out pathname
+     c                   if        %parms >= 3
+     c                   callp     PARAM_copy(local: peLocal)
+     c                   else
+     c                   eval      local = remote
+     c                   endif
 
      c                   callp     initFtpApi
 
@@ -3084,19 +3170,12 @@
      c                   return    -1
      c                   endif
 
-      * figure out pathname
-     c                   if        %parms > 2
-     c                   eval      wwLocal = peLocal
-     c                   else
-     c                   eval      wwLocal = peRemote
-     c                   endif
-
       * get total number of bytes to send
-     c                   eval      wkTotBytes = lclFileSiz(wwLocal)
+     c                   eval      wkTotBytes = lclFileSiz(local)
 
       * open the file to send
      c                   eval      wwSaveMode = wkLineMode
-     c                   eval      wwFD = OpnFile(wwLocal: 'R': p_read:
+     c                   eval      wwFD = OpnFile(local: 'R': p_read:
      c                                         p_close: peSocket)
      c                   if        wwFD < 0
      c                   eval      wkLineMode = wwSaveMode
@@ -3104,7 +3183,7 @@
      c                   endif
 
       * upload data from the file...
-     c                   if        FTP_appraw(peSocket: peRemote: wwFD:
+     c                   if        FTP_appraw(peSocket: remote: wwFD:
      c                                     p_read) < 0
      c                   eval      wkLineMode = wwSaveMode
      c                   callp     CloseMe(wwFD)
@@ -3135,15 +3214,18 @@
       *  returns 0 upon success, or -1 upon error.
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_appraw      B                   EXPORT
-     D FTP_appraw      PI            10I 0
+     D FTP_appraw      PI            10I 0 
      D   peSocket                    10I 0 value
-     D   peRemote                   256A   const
+     D   peRemote                  5000A   varying const options(*trim)
      D   peDescr                     10I 0 value
      D   peReadProc                    *   PROCPTR value
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwSock          S             10I 0
      D wwReply         S             10I 0
+     D remote          s           5000a   varying
+
+     c                   callp     PARAM_copy(remote: peRemote)
 
      c                   callp     initFtpApi
 
@@ -3170,7 +3252,7 @@
      c                   return    -1
      c                   endif
 
-     c                   if        SendLine(wkSocket: 'APPE ' + peRemote)<0
+     c                   if        SendLine(wkSocket: 'APPE ' + remote)<0
      c                   callp     ftptcp_close(wwSock)
      c                   return    -1
      c                   endif
@@ -3305,7 +3387,7 @@
      P Reply           B
      D Reply           PI            10I 0
      D   peSocket                    10I 0 value
-     D   peRespMsg                  256A   options(*nopass)
+     D   peRespMsg                  512A   varying options(*nopass)
 
      D wwLine          S            512A
      D wwReply         S              3  0
@@ -3328,7 +3410,7 @@
 
      c                   move      wwChar3       wwReply
      c                   if        %parms > 1
-     c                   eval      peRespMsg = %subst(wwLine:5)
+     c                   eval      peRespMsg = %trimr(%subst(wwLine:5))
      c                   endif
 
       * If this is a single line reply, we're done.
@@ -3479,13 +3561,13 @@
      P SendLine        B
      D SendLine        PI            10I 0
      D   peSocket                    10I 0 value
-     D   peData                     261A   const
+     D   peData                    5261A   varying const options(*trim)
+
      D wwLen           S             10I 0
-     D p_Data          S               *
-     D wwBigger        S            263A
+     D wwBigger        S           5263A   varying
 
      c                   eval      wwBigger = peData
-     c     ' '           checkr    wwBigger      wwLen
+     c                   eval      wwLen = %len(peData)
 
      c                   if        wkDebug = *On
      c                               and wwLen > 0
@@ -3493,15 +3575,13 @@
      c                   endif
 
      c                   if        wwLen > 0
-     c                   callp     ToASCII(wwBigger: wwLen)
+     c                   eval      wwBigger = xlate_toNetwork(wwBigger)
      c                   endif
-
-     c                   eval      %subst(wwBigger:wwLen+1:2) = x'0D0A'
-     c                   eval      p_Data = %addr(wwBigger)
+     c                   eval      wwBigger += x'0D0A'
 
      c                   return    ftptcp_write( peSocket
-     c                                         : p_Data
-     c                                         : wwLen+2 )
+     c                                         : %addr(wwBigger: *data)
+     c                                         : %len(wwBigger) )
      P                 E
 
 
@@ -3583,7 +3663,8 @@
      c                   endif
 
       * if TLS is enabled the data conn should also be TLS    
-     c                   if        wkTlsData = FTPS_PRIVATE
+     c                   if        wkTlsMode <> FTPS_NONE
+     c                             and wkTlsData = FTPS_PRIVATE
      c                   if        ftptcp_upgrade( wwSock
      c                                           : FTPTCP_CLIENT_SESSION
      c                                           : wkAppId
@@ -3676,7 +3757,8 @@
      c                   endif
 
       * if TLS is enabled the data conn should also be TLS    
-     c                   if        wkTlsData = FTPS_PRIVATE
+     c                   if        wkTlsMode <> FTPS_NONE
+     c                             and wkTlsData = FTPS_PRIVATE
      c                   if        ftptcp_upgrade( wwSock
      c                                           : FTPTCP_CLIENT_SESSION
      c                                           : wkAppId
@@ -3781,7 +3863,8 @@
      c                   endif
 
       * if TLS is enabled the data conn should also be TLS    
-     c                   if        wkTlsData = FTPS_PRIVATE
+     c                   if        wkTlsMode <> FTPS_NONE
+     c                             and wkTlsData = FTPS_PRIVATE
      c                   if        ftptcp_upgrade( wwSock
      c                                           : FTPTCP_CLIENT_SESSION
      c                                           : wkAppId
@@ -3889,7 +3972,8 @@
      c                   endif
 
       * if TLS is enabled the data conn should also be TLS    
-     c                   if        wkTlsData = FTPS_PRIVATE
+     c                   if        wkTlsMode <> FTPS_NONE
+     c                             and wkTlsData = FTPS_PRIVATE
      c                   if        ftptcp_upgrade( wwSock
      c                                           : FTPTCP_CLIENT_SESSION
      c                                           : wkAppId
@@ -4018,7 +4102,7 @@
      D wwSocket        S             10I 0
      D wwDotted        S             16A   varying
      D wwErrMsg        S            256A
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwPort          S              5U 0
      D wwPortStr       S             80A
      D wwLen           S             10I 0
@@ -4184,7 +4268,7 @@
      D wwLSB           S              5I 0
      D wwMSB           S              5I 0
      D wwPasStr        S             80A
-     D wwMsg           S            256A
+     D wwMsg           S            512A     varying
      D wwPort          s              5U 0
      D wwReply         S             10I 0
      D wwChrPort       s             20a     varying
@@ -4342,7 +4426,7 @@
 
      D wwPoint         s             10u 0
      D wwReply         s             10u 0
-     D wwMsg           s            256a
+     D wwMsg           s            512a    varying
 
       *************************************************
       * do NOT allow the restart point to persist
@@ -4395,7 +4479,7 @@
 
      D wwLine          S             20A
      D wwReply         S             10I 0
-     D wwRepMsg        S            256A
+     D wwRepMsg        S            512A   varying
 
       * Which mode did we want?
      c                   if        wkBinary = *ON
@@ -4432,7 +4516,7 @@
      P SetError        B                   export
      D SetError        PI
      D   peErrNum                    10I 0 value
-     D   peErrMsg                    60A   const
+     D   peErrMsg                   512A   varying const
 
      D savSessionIdx   S                   like(wkSessionIdx)
 
@@ -4568,13 +4652,20 @@
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P DiagLog         B
      D DiagLog         PI
-     D   peMsgTxt                   256A   Const
+     D   peMsgTxt                  5256A   varying const
      D wwSocket        s             10I 0
      c                   eval      wwSocket = wkSocket
      c                   if        wkLogProc = *NULL
+     c                             and wkLogLongProc = *NULL
      c                   callp     DiagMsg(peMsgTxt: wwSocket)
      c                   else
+
+     c                   if        wkLogLongProc = *NULL
      c                   callp     LogProc(peMsgTxt: wkLogExtra)
+     c                   else
+     c                   callp     LogLongProc(peMsgTxt: wkLogExtra)
+     c                   endif
+
      c                   callp     selectSession(wwSocket)
      c                   endif
      P                 E
@@ -4585,7 +4676,7 @@
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P DiagMsg         B
      D DiagMsg         PI
-     D   peMsgTxt                   256A   Const
+     D   peMsgTxt                  5256A   varying const
      D   peSession                   10I 0 value
 
      D dsEC            DS
@@ -4595,7 +4686,7 @@
      D QMHSNDPM        PR                  ExtPgm('QMHSNDPM')
      D   MessageID                    7A   Const
      D   QualMsgF                    20A   Const
-     D   MsgData                    256A   Const
+     D   MsgData                   5256A   Const
      D   MsgDtaLen                   10I 0 Const
      D   MsgType                     10A   Const
      D   CallStkEnt                  10A   Const
@@ -4603,14 +4694,14 @@
      D   MessageKey                   4A
      D   ErrorCode                 1024A   options(*varsize)
 
-     D wwMsgTxt        s            268A
+     D wwMsgTxt        s           5268A   varying
      D wwMsgLen        S             10I 0
      D wwTheKey        S              4A
 
      c                   eval      wwMsgTxt = %trim(%editc(peSession:'L')) 
      c                                      + ': ' + peMsgTxt
+     c                   eval      wwMsgLen = %len(wwMsgTxt)
 
-     c     ' '           checkr    wwMsgTxt      wwMsgLen
      c                   callp     QMHSNDPM( 'CPF9897'
      c                                     : 'QCPFMSG   *LIBL'
      c                                     : wwMsgTxt
@@ -5261,20 +5352,20 @@
       *   full, true pathname (not a symlink or relative pathname)
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P fixpath         B
-     D fixpath         PI           256A
-     D   pePath                     256A   const
+     D fixpath         PI          5000A   varying
+     D   pePath                    5000A   varying const options(*trim)
      D   peObjType                   10A
      D   peCodePg                    10I 0
 
-     D wwPath          S            257A
-     D wwReal          S            256A
+     D wwPath          S           5000A   varying
+     D wwReal          S           5000A
      D st              ds                  likeds(statds64)
      D wwSymlink       S              1A   inz(*off)
      D wwPos           S              5I 0
      D wwErrMsg        S            256A
      D rc              S             10I 0
 
-     c                   eval      wwPath = %trimr(%trim(pePath):x'00')
+     c                   eval      wwPath = %trimr(pePath:x'00')
      c                   eval      st.st_codepage = DFT_LOC_CP
      c                   eval      st.st_objtype  = *blanks
 
@@ -5285,14 +5376,14 @@
      c                   dou       wwSymlink = *Off
 
      c                   eval      wwSymLink = *Off
-     c                   if        lstat64(%trimr(wwPath): st) < 0
+     c                   if        lstat64(wwPath: st) < 0
      c                   callp     geterror(wwErrMsg)
      c                   callp     SetError(FTP_LSTAT: wwErrMsg)
      c                   leave
      c                   endif
 
      c                   if        s_isLnk(st.st_mode) = *on
-     c                   eval      rc = readlink( %trimr(wwPath)
+     c                   eval      rc = readlink( wwPath
      c                                          : %addr(wwReal)
      c                                          : %size(wwReal))
      c                   if        rc > 0
@@ -5308,7 +5399,7 @@
       *    current directory into it...
       *************************************************
      c                   if        %subst(wwPath:1:1) <> '/'
-     c                   eval      wwPath = %trimr(getdir) + wwPath
+     c                   eval      wwPath = getdir() + wwPath
      c                   endif
 
      c                   eval      peObjType = st.st_objtype
@@ -5322,12 +5413,13 @@
       *  Get current working directory  (wrapper for getcwd)
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P getdir          B
-     D getdir          PI           256A
+     D getdir          PI          5000A   varying
 
-     D wwRetVal        S            256A
+     D wwRetVal        S           5000A
      D wwPos           S              5I 0
 
-     c                   if        getcwd(%addr(wwRetVal): 256) = *NULL
+     c                   if        getcwd( %addr(wwRetVal)
+     c                                   : %size(wwRetVal)) = *NULL
      c                   return    './'
      c                   endif
 
@@ -5341,7 +5433,7 @@
      c                   eval      %subst(wwRetVal:wwPos:1) = '/'
      c                   endif
 
-     c                   return    wwRetVal
+     c                   return    %trimr(wwRetVal)
      P                 E
 
 
@@ -5612,16 +5704,16 @@
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P lclFileSiz      B
      D lclFileSiz      PI            16P 0
-     D   pePath                     256A   const
+     D   pePath                    5000A   varying const options(*trim)
 
-     D wwPath          S            256A
+     D wwPath          S           5000A   varying
      D st              DS                  likeds(statds64)
      D wwType          S             10A
      D wwCP            S             10I 0
 
      c                   eval      wwPath = fixpath(pePath: wwType: wwCP)
 
-     c                   if        lstat64(%trimr(wwPath): st) < 0
+     c                   if        lstat64(wwPath: st) < 0
      c                   return    0
      c                   endif
 
@@ -5894,6 +5986,7 @@
      c     wkSessionIdx  occur     wkDsEBCDICF
 
      c                   eval      wkLogProc = wkLogExit
+     c                   eval      wkLogLongProc = wkLogLongExit
      c                   eval      wkStsProc = wkStsExit
 
      c                   return
@@ -6021,22 +6114,26 @@
       *  returns -1 upon failure, or 0 upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P ftp_ParseURL    B                   export
-     D ftp_ParseURL    PI            10I 0
-     D  peURL                       256A   const
+     D ftp_ParseURL    PI            10I 0 
+     D  peURL                     16383A   varying const
      D  peService                    32A
      D  peUserName                   32A
      D  pePassword                   32A
      D  peHost                      256A
      D  pePort                       10I 0
-     D  pePath                      256A
+     D  pePath                     5000A   varying
 
      D atoi            PR            10I 0 ExtProc('atoi')
      D  string                         *   value options(*string)
 
+     D url             s          16383A   varying
      D wwLen           S             10I 0
-     D wwURL           S            256A
      D wwTemp          S             65A
      D wwPos           S             10I 0
+     D path            s           5000a   varying
+     D OldPath         s            256A   based(p_OldPath)
+
+     c                   callp     PARAM_copy(url: peURL)
 
      c                   eval      peService = *Blanks
      c                   eval      peUserName = *blanks
@@ -6044,7 +6141,7 @@
      c                   eval      peHost = *blanks
      c                   eval      pePort = 0
      c                   eval      pePath = *blanks
-     c                   eval      wwURL = %trim(peURL)
+     c                   eval      url = %trim(url)
 
      C****************************************************************
      C*  A valid FTP url should look like:
@@ -6057,15 +6154,15 @@
 
      C* First, extract the URL's "scheme" (which in the case of ftp
      C*  is the service's name as well):
-     c                   eval      wwPos = %scan(':': wwURL)
+     c                   eval      wwPos = %scan(':': url)
      c                   if        wwPos < 2 or wwPos > 255
      c                   callp     SetError(FTP_BADURL:'Relative URLs '+
      c                              'are not supported ')
      c                   return    -1
      c                   endif
 
-     c                   eval      peService = %subst(wwURL:1:wwPos-1)
-     c                   eval      wwURL = %subst(wwURL:wwPos+1)
+     c                   eval      peService = %subst(url:1:wwPos-1)
+     c                   eval      url = %subst(url:wwPos+1)
      c     upper:lower   xlate     peService     peService
 
      c                   if        peService<>'ftp'
@@ -6077,24 +6174,24 @@
      C* now the URL should be //www.server.com/mydir/somefile.ext
      C*   make sure it does start with the //, and strip that off.
 
-     c                   if        %subst(wwURL:1:2) <> '//'
+     c                   if        %subst(url:1:2) <> '//'
      c                   callp     SetError(FTP_BADURL:'Relative URLs '+
      c                              'are not supported ')
      c                   return    -1
      c                   endif
 
-     c                   eval      wwURL = %subst(wwURL:3)
+     c                   eval      url = %subst(url:3)
 
      C* now, either everything up to the first '/' is part of the
      C*  host name, or the entire string is a hostname.
 
-     c                   eval      wwPos = %scan('/': wwURL)
+     c                   eval      wwPos = %scan('/': url)
      c                   if        wwPos = 0
-     c                   eval      wwPos = %len(%trimr(wwURL)) + 1
+     c                   eval      wwPos = %len(%trimr(url)) + 1
      c                   endif
 
-     c                   eval      peHost = %subst(wwURL:1:wwPos-1)
-     c                   eval      wwURL = %subst(wwURL:wwPos)
+     c                   eval      peHost = %subst(url:1:wwPos-1)
+     c                   eval      url = %subst(url:wwPos)
 
      C* the host name may optionally contain a user name,
      C*  and possibly also a password:
@@ -6127,11 +6224,12 @@
      c                   endif
 
      C* Whatever is left should now be the pathname to the file itself.
-     c                   eval      pePath = wwURL
-     c                   if        pePath = *blanks
-     c                   eval      pePath = '/'
+     c                   eval      path = url
+     c                   if        %len(path) = 0 or path = *blanks
+     c                   eval      path = '/'
      c                   endif
 
+     c                   callp     PARAM_return(pePath: path)
      c                   return    0
      P                 E
 
@@ -6151,8 +6249,8 @@
      P FTP_url_get_raw...
      P                 B                   EXPORT
      D FTP_url_get_raw...
-     D                 PI            10I 0
-     D  peURL                       256A   const
+     D                 PI            10I 0 
+     D  peURL                     16383A   const
      D  peDescr                      10I 0 value
      D  peWrtProc                      *   PROCPTR value
      D  peASCII                       1N   const options(*nopass)
@@ -6165,11 +6263,14 @@
      D wwPass          s             32A
      D wwHost          s            256A
      D wwPort          s             10I 0
-     D wwPath          s            256A
+     D wwPath          s           5000A   varying
      D wwTimeout       s             10I 0
      D wwAcct          s             32A
      D wwBinary        s              1N
      D wwRC            s             10I 0
+     D url             s          16383A   varying
+
+     c                   callp     PARAM_copy(url: peUrl)
 
       *********************************************************
       ** Set up defaults for any parameters that weren't passed
@@ -6195,7 +6296,7 @@
       *********************************************************
       ** Parse the URL
       *********************************************************
-     c                   if        FTP_ParseURL(peURL: wwSrv: wwUsr:
+     c                   if        FTP_ParseURL(url: wwSrv: wwUsr:
      c                                  wwPass: wwHost: wwPort: wwPath) < 0
      c                   return    -1
      c                   endif
@@ -6252,33 +6353,33 @@
       *  returns -1 upon failure, or 0 upon success
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_url_get     B                   EXPORT
-     D FTP_url_get     PI            10I 0
-     D  peURL                       256A   const
-     D  peLocal                     256A   const options(*nopass)
+     D FTP_url_get     PI            10I 0 
+     D  peURL                     16383A   varying const
+     D  peLocal                    5000A   varying const options(*trim:*nopass)
      D  peASCII                       1N   const options(*nopass)
      D  peTimeout                    10I 0 value options(*nopass)
      D  peAcct                       32A   const options(*nopass)
 
+     D url             s          16383a   varying
      D wwSession       s             10I 0
      D wwSrv           s             32A
      D wwUsr           s             32A
      D wwPass          s             32A
      D wwHost          s            256A
      D wwPort          s             10I 0
-     D wwPath          s            256A
+     D wwPath          s           5000A   varying
      D wwTimeout       s             10I 0
      D wwAcct          s             32A
      D wwBinary        s              1N
      D wwRC            s             10I 0
-     D wwLocal         s            256A
+     D local           s           5000A   varying
 
-      *********************************************************
-      ** Set up defaults for any parameters that weren't passed
-      *********************************************************
+     c                   callp     PARAM_copy(url: peURL)
+
      c                   if        %parms >= 2
-     c                   eval      wwLocal = peLocal
+     c                   callp     PARAM_copy(local: peLocal)
      c                   else
-     c                   eval      wwLocal = *blanks
+     c                   eval      local = ''
      c                   endif
 
      c                   if        %parms >= 3
@@ -6302,7 +6403,7 @@
       *********************************************************
       ** Parse the URL
       *********************************************************
-     c                   if        FTP_ParseURL(peURL: wwSrv: wwUsr:
+     c                   if        FTP_ParseURL(url: wwSrv: wwUsr:
      c                                  wwPass: wwHost: wwPort: wwPath) < 0
      c                   return    -1
      c                   endif
@@ -6319,8 +6420,8 @@
      c                   eval      wwPort = FTP_PORT
      c                   endif
 
-     c                   if        wwLocal = *blanks
-     c                   eval      wwLocal = wwPath
+     c                   if        %len(local) = 0 or local = *blanks
+     c                   eval      local = wwPath
      c                   endif
 
       *********************************************************
@@ -6344,7 +6445,7 @@
      c                   endif
 
      c                   eval      wwRC = FTP_get(wwSession: wwPath:
-     c                                            wwLocal)
+     c                                            local)
      c                   callp     FTP_quit(wwSession)
 
      c                   return    wwRC
@@ -6559,7 +6660,7 @@
      D   pePass                    1000a   varying const options(*nopass)
      D   peAcct                    1000a   varying const options(*nopass)
 
-     D wwMsg           S            256A
+     D wwMsg           S            512A   varying
      D wwSock          S             10I 0
      D wwSaveDbg       S              1A
      D wwReply         S             10I 0
@@ -6932,9 +7033,9 @@
       *  returns -1 upon error, or 0 if successful
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      P FTP_Restart     B                   export
-     D FTP_Restart     PI            10i 0
+     D FTP_Restart     PI            10i 0 
      D    peSocket                   10i 0 value
-     D    peFile                    256A   const options(*omit)
+     D    peFile                   5000A   varying const options(*omit)
      D    pePos                      10u 0 const options(*nopass:*omit)
 
      D CEETSTA         PR
@@ -6943,6 +7044,11 @@
      D   fc                          12a   options(*omit)
 
      D given           s             10i 0
+     D filename        s           5000a   varying
+
+     c                   if        %addr(peFile) <> *null
+     c                   callp     PARAM_copy(filename: peFile)
+     c                   endif
 
      c                   callp     initFtpApi
 
@@ -6955,7 +7061,7 @@
 
      C                   callp     CEETSTA(given: 2: *omit)
      c                   if        given = 1
-     c                   eval      wkRestPt = lclFileSiz(peFile)
+     c                   eval      wkRestPt = lclFileSiz(filename)
      c                   return    0
      c                   endif
 
@@ -7055,37 +7161,6 @@
      c                   return    0
      P                 E
    
-
-      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     P QueryFeat       B                         
-     D                 PI            10i 0
-     D    peSocket                   10i 0 value
-
-     D feats           s          32767a   varying 
-
-      /free
-
-        if FTP_feat(peSocket: feats) = -1;
-          return -1;
-        endif;
-
-        feats = %xlate(lower:upper: feats);
-
-        if %scan('CCC': feats) > 0;
-        endif;
-
-        if %scan('AUTH TLS': feats) > 0;
-        endif;
-
-        if %scan('AUTH SSL': feats) > 0;
-        endif;
-
-        return 0;
-        
-      /end-free
-     P                 E                         
-
    
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       *  FTP_setProxy: Sets an HTTP proxy server to use for any 
@@ -7134,3 +7209,78 @@
      c                   return    0
      P                 E                         
 
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      *  PARAM_copy / PARAM_copy_real:  
+      *
+      *  Originally many paths were passed to FTPAPI as 256A. It 
+      *  wasn't long enough, so had to be switched to a VARCHAR that
+      *  is longer.
+      *
+      *  This is a problem because the programs compiled prior to the
+      *  change will pass the parameter as 256, and those after will 
+      *  pass it as varchar. To resolve this, this routine uses some
+      *  pointer and parameter tricks to detect what was passed and
+      *  sort out the difference.
+      *
+      *   
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     D*ame+++++++++++ETDsFrom+++To/L+++IDc.Keywords+++++++++++++++++++++++++
+     P PARAM_copy_real...
+     P                 B                 
+     D                 PI
+     D   dst                      16384a   varying options(*varsize)
+     D   src                      16384a   varying options(*varsize)
+
+     D param           ds                  qualified
+     D                                     based(p_param)
+     D   len                          5u 0 overlay(param:1)
+     D   char                       256a   overlay(param:1)
+     D   varchar                  16383a   varying overlay(param:1)
+     
+     c                   eval      p_param = %addr(src)
+     C*0N01Factor1+++++++Opcode&ExtFactor2+++++++Result++++++++Len++D+HiLoEq
+     c                   if        param.len >= 16384
+     c                   eval      dst = %trimr(param.char)
+     c                   else    
+     c                   eval      dst = %trimr(param.varchar)
+     c                   endif
+
+     P                 E
+
+
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      *  PARAM_return / PARAM_return_real:  
+      *
+      *  Originally many paths were passed to FTPAPI as 256A. It 
+      *  wasn't long enough, so had to be switched to a VARCHAR that
+      *  is longer.
+      *
+      *  This is a problem because the programs compiled prior to the
+      *  change will pass the parameter as 256, and those after will 
+      *  pass it as varchar. To resolve this, this routine uses some
+      *  pointer and parameter tricks to detect what was passed and
+      *  sort out the difference.
+      *   
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     P PARAM_return_real...
+     P                 B                 
+     D                 PI
+     D   dst                       5000a   varying
+     D   src                       5000A   varying const options(*trim)
+
+     D param           ds                  qualified
+     D                                     based(p_param)
+     D   len                          5u 0 overlay(param:1)
+     D   char                       256a   overlay(param:1)
+     D   varchar                   5000a   varying overlay(param:1)
+     
+     c                   eval      p_param = %addr(dst)
+     C*0N01Factor1+++++++Opcode&ExtFactor2+++++++Result++++++++Len++D+HiLoEq
+     c                   if        param.len >= 16384
+     c                   eval      param.char = src
+     c                   else    
+     c                   eval      param.varchar = src
+     c                   endif
+
+     P                 E

@@ -104,10 +104,9 @@
  E01 c                   endif
 
       ****************************************************************
-      ** get a list of up to 50 files in the pub/FreeBSD/tools dir
-      ** (we intend to download all the of these files)
+      ** get a list of up to 50 files in the 'floppies' folder on the
+      ** server (we intend to download all the of these files)
       ****************************************************************
-     C*0N01Factor1+++++++Opcode&ExtExtended-factor2+++++++++++++++++++++++++
      c                   eval      folder = 'pub/FreeBSD-Archive'
      c                                    + '/old-releases/i386'
      c                                    + '/2.2.7-RELEASE/floppies'
@@ -138,7 +137,7 @@
  E01 c                   endif
 
       ****************************************************************
-      ** download everything in tools dir into our incoming dir.
+      ** download everything in floppies dir into our incoming dir.
       ****************************************************************
      c                   eval      gotfiles = 0
 

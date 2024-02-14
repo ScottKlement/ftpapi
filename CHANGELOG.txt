@@ -1,6 +1,12 @@
 Changes from 2.7 -> 2.6
   Added support for using an HTTP proxy
   Added new function FTP_setProxy to configure the proxy
+  Fix bug with all transfers using TLS in 2.6
+  Increased length of pathnames to 5000 (previously 256)
+    code will auto-detect older programs passing 256 and
+    handle them properly.
+  Update TESTGET/TESTMGET to use active files on freebsd.org
+    so examples will work
 
 Changes from 2.6 -> 2.5:
   Moved source code to IFS, Created Makefile, Added to GitHub
