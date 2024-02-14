@@ -28,10 +28,8 @@ endif
 
 ILIBRARY      := /qsys.lib/$(LIBRARY).lib
 IPKGLIB       := /qsys.lib/$(PKGLIB).lib
-RPGINCDIR     := 'src/rpg'
+RPGINCDIR     := '$(CURDIR)/src/rpg'
 RPGINCDIR     := incdir($(RPGINCDIR))
-CINCDIR       := 'src' 'src/expat' 
-CINCDIR       := incdir($(CINCDIR))
 BNDDIR        :=
 C_OPTS				:= localetype(*localeucs2) sysifcopt(*ifsio) define(HAVE_EXPAT_CONFIG_H)
 CL_OPTS       :=
@@ -43,7 +41,7 @@ BNDSRVPGM			:=
 PGM_ACTGRP		:= FTPAPI
 SRVPGM_ACTGRP := *caller
 
-SETLIBLIST    := liblist | grep ' USR' | while read lib type; do liblist -d $$lib; done; liblist -a $(LIBRARY)
+SETLIBLIST    := liblist | grep ' USR' | while read lib type; do liblist -d $$lib; done; liblist -cd; liblist -a $(LIBRARY)
 TMPSRC        := tmpsrc
 ISRCFILE      := $(ILIBRARY)/$(TMPSRC).file
 SRCFILE       := srcfile($(LIBRARY)/$(TMPSRC)) srcmbr($(TMPSRC))
