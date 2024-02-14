@@ -1945,6 +1945,7 @@ dcl-proc SetupIconv;
   dcl-ds netCode    likeds(QtqCode_T) inz(*likeds); 
   dcl-s  fatalError varchar(100);
   dcl-s  msgKey     char(4);
+  dcl-s  err        int(10) based(p_err);
 
   dcl-ds errFail qualified;
     bytesProv  int(10) inz(0);
@@ -1958,18 +1959,21 @@ dcl-proc SetupIconv;
   jobToUtf = *all'00';
   jobToUtf.return_value = -1;
   xlate_init = *off;
+  p_err = system_errno();
+  err = 0;
 
-  jobToUtf = iconv_open(netCode: jobCode);
+  jobToUtf = QtqIconvOpen(netCode: jobCode);
   if jobToUtf.return_value >= 0;
     reset jobCode;
     reset netCode;
     jobCode.CCSID = 0;
     netCode.CCSID = 1208;
-    utfToJob = iconv_open(jobCode: netCode);
+    utfToJob = QtqIconvOpen(jobCode: netCode);
   endif;
 
   if   utfToJob.return_value < 0
     or jobToUtf.return_value < 0;
+    p_err = system_errno();
     fatalError = 'Unable to set up UTF-8 translation';
     QMHSNDPM( 'CPF9898'
             : 'QCPFMSG   *LIBL'
