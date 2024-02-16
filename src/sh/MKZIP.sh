@@ -3,7 +3,7 @@
 set -x
 INPREF=/qsys.lib/$1.lib
 MAKEDIR=$2
-OUTPREF=${HOME}/ftpapi
+OUTPREF=/tmp/ftpapi
 
 ############################################
 # copy each member to a stream file
