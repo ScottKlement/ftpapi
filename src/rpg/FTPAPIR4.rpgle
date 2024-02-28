@@ -4787,10 +4787,14 @@
      c                   endif
 
      c                   if        wwExists = *Off and peRWflag = 'R'
+     c                   callp     SetError(FTP_OPNERR
+     c                                     : 'Local file not found!')
      c                   return    -1
      c                   endif
 
      c                   if        wwExists = *Off and wkRestPt>0
+     c                   callp     SetError( FTP_OPNERR
+     c                                     : 'Local file not found!')
      c                   return    -1
      c                   endif
 
