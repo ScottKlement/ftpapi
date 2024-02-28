@@ -4282,7 +4282,7 @@
      c                   exsr      try_pasv
      c                   endif
 
-     c                   return    tcp_conn(wwHost: wwPort)
+     c                   return    tcp_conn(wwHost: wwPort: wkTimeout)
 
       *==========================================================
       * This tries to use enhanced passive (EPSV) mode. If this

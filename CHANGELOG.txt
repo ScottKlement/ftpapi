@@ -7,6 +7,10 @@ Changes from 2.7 -> 2.6
     handle them properly.
   Update TESTGET/TESTMGET to use active files on freebsd.org
     so examples will work
+  Change OpnFile to log an error if the local file isn't found
+    when opening for reading.
+  Passive mode didn't have a timeout set for making connection
+    added one.
 
 Changes from 2.6 -> 2.5:
   Moved source code to IFS, Created Makefile, Added to GitHub
