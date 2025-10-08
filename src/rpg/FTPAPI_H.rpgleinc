@@ -30,8 +30,8 @@
       * routines in the FTPAPI service program.
       *
 
-     D FTPAPI_VERSION  C                   CONST('2.7')
-     D FTPAPI_RELDATE  C                   CONST('2024-01-24')
+     D FTPAPI_VERSION  C                   CONST('2.8')
+     D FTPAPI_RELDATE  C                   CONST('2024-09-09')
 
       **********************************************************************
       *  Exit Points for ftp_xproc()

@@ -7198,15 +7198,15 @@
      c                   eval      wkProxUser = ''
      c                   eval      wkProxPass = ''
 
-     c                   if        %parms >= 4 and %addr(pePort) <> *null
+     c                   if        %parms >= 2 and %addr(pePort) <> *null
      c                   eval      wkProxPort = pePort
      c                   endif
 
-     c                   if        %parms >= 5 and %addr(peUser) <> *null
+     c                   if        %parms >= 3 and %addr(peUser) <> *null
      c                   eval      wkProxUser = peUser
      c                   endif
 
-     c                   if        %parms >= 6 and %addr(pePass) <> *null
+     c                   if        %parms >= 4 and %addr(pePass) <> *null
      c                   eval      wkProxPass = pePass
      c                   endif
         

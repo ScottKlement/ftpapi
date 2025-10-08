@@ -2018,7 +2018,7 @@ dcl-proc do_iconv_real export;
   dcl-s p_outputBuf pointer;
   dcl-s outputLeft  uns(10);
   dcl-s outlen      int(10);
-  dcl-s rc          int(10);
+  dcl-s rc          uns(10);
 
   if xlate_init = *off;
     setupIconv();
