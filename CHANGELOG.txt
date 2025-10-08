@@ -1,8 +1,11 @@
+Changes from 2.9 -> 2.8
+  fix optional parm checking in FTP_setProxy
+  bump copyrights to 2025
+
 Changes from 2.8 -> 2.7
   When creating an FTPAPI release, build ZIP packages under /tmp
   Fix problems with include files during FTPAPI release build
   Fix some xlate/iconv problems
-  fix optional parm checking in FTP_setProxy
   
 Changes from 2.7 -> 2.6
   Added support for using an HTTP proxy

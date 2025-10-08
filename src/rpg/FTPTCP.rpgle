@@ -5,7 +5,7 @@
 //         to move them out of the main source
 //
 
-// Copyright (c) 2001-2024 Scott C. Klement                                    +
+// Copyright (c) 2001-2025 Scott C. Klement                                    +
 // All rights reserved.                                                        +
 //                                                                             +
 // Redistribution and use in source and binary forms, with or without          +
