@@ -1,13 +1,13 @@
-Changes from 2.9 -> 2.8
+Changes from 2.8 -> 2.9
   fix optional parm checking in FTP_setProxy
   bump copyrights to 2025
 
-Changes from 2.8 -> 2.7
+Changes from 2.7 -> 2.8
   When creating an FTPAPI release, build ZIP packages under /tmp
   Fix problems with include files during FTPAPI release build
   Fix some xlate/iconv problems
-  
-Changes from 2.7 -> 2.6
+
+Changes from 2.6 -> 2.7
   Added support for using an HTTP proxy
   Added new function FTP_setProxy to configure the proxy
   Fix bug with all transfers using TLS in 2.6
@@ -21,7 +21,7 @@ Changes from 2.7 -> 2.6
   Passive mode didn't have a timeout set for making connection
     added one.
 
-Changes from 2.6 -> 2.5:
+Changes from 2.5 -> 2.6:
   Moved source code to IFS, Created Makefile, Added to GitHub
   Converted README to markdown
   Moved network routines to new module FTPTCP. Requires V7R1
@@ -30,7 +30,7 @@ Changes from 2.6 -> 2.5:
   Added support for enhanced (EPSV, EPRT) data channel commands
   Added support for FTPS (TLS/SSL)
 
-Changes from 2.5 -> 2.4:
+Changes from 2.4 -> 2.5:
   Only replace .SAVF with .FILE if path is pointing to a library,
     since people are using .SAVF for IFS extensions these days.
 
